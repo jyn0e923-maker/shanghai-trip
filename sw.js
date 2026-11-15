@@ -1,6 +1,6 @@
 // 상하이 여행 오프라인 서비스 워커
 // 이 파일은 build.ps1이 site/sw.js로 복사하면서 버전을 바꿔 넣어요. 직접 고치려면 이 파일을 고치세요.
-const VERSION = '20261115-201915';
+const VERSION = '20261115-203250';
 const CACHE = 'shanghai-trip-' + VERSION;
 
 // 처음 한 번 열 때 통째로 저장해 둘 파일들
