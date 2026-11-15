@@ -1,6 +1,6 @@
 // 상하이 여행 오프라인 서비스 워커
 // 이 파일은 build.ps1이 site/sw.js로 복사하면서 버전을 바꿔 넣어요. 직접 고치려면 이 파일을 고치세요.
-const VERSION = '20261115-191939';
+const VERSION = '20261115-194629';
 const CACHE = 'shanghai-trip-' + VERSION;
 
 // 처음 한 번 열 때 통째로 저장해 둘 파일들
@@ -8,45 +8,7 @@ const ASSETS = [
   './',
   './index.html',
   './pc.html',
-  './manifest.webmanifest',
-  './icons/icon-180.png',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/icon-maskable-512.png',
-  './photos/hongqiao-1.jpg',
-  './photos/hongqiao-2.jpg',
-  './photos/pudong-1.jpg',
-  './photos/pudong-2.jpg',
-  './photos/shamei-1.jpg',
-  './photos/shamei-2.jpg',
-  './photos/nanjing-1.jpg',
-  './photos/nanjing-2.jpg',
-  './photos/bund-1.jpg',
-  './photos/bund-2.jpg',
-  './photos/waibaidu-1.jpg',
-  './photos/waibaidu-2.jpg',
-  './photos/yuyuan-1.jpg',
-  './photos/yuyuan-2.jpg',
-  './photos/yuyuan-3.jpg',
-  './photos/lujiazui-1.jpg',
-  './photos/lujiazui-2.jpg',
-  './photos/shtower-1.jpg',
-  './photos/shtower-2.jpg',
-  './photos/cruise-1.jpg',
-  './photos/cruise-2.jpg',
-  './photos/wukang-1.jpg',
-  './photos/wukang-2.jpg',
-  './photos/yongkang-1.jpg',
-  './photos/yongkang-2.jpg',
-  './photos/tianzifang-1.jpg',
-  './photos/tianzifang-2.jpg',
-  './photos/kpg-1.jpg',
-  './photos/kpg-2.jpg',
-  './photos/xintiandi-1.jpg',
-  './photos/rockbund-1.jpg',
-  './photos/rockbund-2.jpg',
-  './photos/disney-1.jpg',
-  './photos/disney-2.jpg'
+  './manifest.webmanifest'
 ];
 
 self.addEventListener('install', (event) => {
