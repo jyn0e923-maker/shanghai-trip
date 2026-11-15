@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="상하이 여행">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#EEF2EF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F171B" media="(prefers-color-scheme: dark)">
+<title>12/14-12/18 상하이 여행 숙소 정하기</title>
+<style>
+:root{
+  --bg:#EEF2EF; --panel:#E2E9E5; --ink:#18252C; --muted:#4D5C61; --line:#C6D1CB;
+  --river:#9CC3BA; --hotel:#C2185B; --sight:#2C6E8F; --pick:#0F7B4E; --warn:#A35F00; --no:#80888C; --ring:#7E8E88;
+  --halo:#EEF2EF; --spot:#7A4FB0; --bad:#B3261E;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F171B; --panel:#17232A; --ink:#E4ECEA; --muted:#97A8AB; --line:#2A3A41;
+    --river:#24504C; --hotel:#FF5C9A; --sight:#6CB4D6; --pick:#43C38A; --warn:#E3A24A; --no:#7D898D; --ring:#56686F;
+    --halo:#0F171B; --spot:#B793E6; --bad:#FF8A80; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --spot:#B793E6; --bad:#FF8A80; --bg:#0F171B; --panel:#17232A; --ink:#E4ECEA; --muted:#97A8AB; --line:#2A3A41;
+  --river:#24504C; --hotel:#FF5C9A; --sight:#6CB4D6; --pick:#43C38A; --warn:#E3A24A; --no:#7D898D; --ring:#56686F;
+  --halo:#0F171B; color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  font-size:16px;line-height:1.6;-webkit-text-size-adjust:100%}
+.wrap{max-width:1080px;margin:0 auto;padding:28px 20px 56px}
+h1,h2{font-family:"Gowun Batang","Nanum Myeongjo","AppleMyungjo","Batang",Georgia,serif;font-weight:700;letter-spacing:-.01em;margin:0}
+h1{font-size:clamp(28px,6vw,46px);line-height:1.2;max-width:16ch}
+h2{font-size:clamp(22px,4vw,28px);line-height:1.3;margin-bottom:6px}
+.sub{color:var(--muted);margin:10px 0 0}
+.verdict{margin:22px 0 0;max-width:62ch;font-size:17px;border-left:3px solid var(--pick);padding:2px 0 2px 14px}
+.verdict b{color:var(--pick)}
+section{margin-top:48px}
+.lead{color:var(--muted);margin:0 0 18px;max-width:64ch}
+
+/* map */
+.mapbox{margin-top:28px;display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:18px;align-items:start}
+.mapframe{position:relative;background:var(--panel);border-radius:14px;overflow:hidden}
+#map{display:block;width:100%;aspect-ratio:1.08/1;max-height:76vh;touch-action:manipulation}
+.controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.controls button,.chip{font:inherit;font-size:14px;border:1px solid var(--line);background:transparent;color:var(--ink);
+  border-radius:999px;padding:6px 14px;cursor:pointer}
+.controls button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--muted);margin-top:10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:11px;height:11px;border-radius:50%;background:var(--hotel);display:inline-block}
+.dia{width:9px;height:9px;background:var(--sight);transform:rotate(45deg);display:inline-block}
+.pin{cursor:pointer}
+.pin:focus{outline:none}
+.pin:focus-visible .mark{stroke:var(--ink);stroke-width:3}
+.pin .lbl{font-size:12px;font-weight:500;fill:var(--ink);paint-order:stroke;stroke:var(--halo);stroke-width:4px;stroke-linejoin:round}
+.pin.sel .mark{stroke:var(--ink);stroke-width:2.5}
+.pin.dim{opacity:.18;pointer-events:none}
+.area{font-family:"Gowun Batang","Nanum Myeongjo","AppleMyungjo","Batang",Georgia,serif;fill:var(--muted);font-size:13px;opacity:.85}
+
+.panel{background:var(--panel);border-radius:14px;padding:18px 18px 20px;min-height:200px}
+.panel .kind{font-size:13px;color:var(--muted);margin:0}
+.panel h3{font-family:"Gowun Batang","Nanum Myeongjo","AppleMyungjo","Batang",Georgia,serif;font-size:22px;line-height:1.3;margin:4px 0 10px}
+.panel p{margin:0 0 10px}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:0 0 12px;font-size:15px}
+.facts dt{color:var(--muted)}
+.facts dd{margin:0}
+.links{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.links a{font-size:14px;color:var(--ink);text-decoration:none;border-bottom:1.5px solid var(--hotel);padding-bottom:1px}
+.links a:hover{color:var(--hotel)}
+.tag{display:inline-block;font-size:13px;font-weight:600;border-radius:6px;padding:1px 8px;margin-left:6px;vertical-align:2px}
+.t-pick{background:var(--pick);color:var(--bg)}
+.t-maybe{border:1.5px solid var(--warn);color:var(--warn)}
+.t-no{border:1.5px solid var(--no);color:var(--no)}
+
+/* hotel table */
+.tablewrap{overflow-x:auto;border-top:2px solid var(--ink)}
+table{border-collapse:collapse;width:100%;min-width:1120px;font-size:15px}
+th,td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:13px}
+td.name{font-weight:600;min-width:170px}
+td.name button{font:inherit;font-weight:600;color:var(--ink);background:none;border:0;padding:0;cursor:pointer;text-align:left;border-bottom:1px dashed var(--muted)}
+tr.mine td{background:color-mix(in srgb,var(--pick) 9%,transparent)}
+.num{white-space:nowrap}
+ul.pc{margin:0;padding-left:18px}
+ul.pc li{margin:0 0 2px}
+.minus{color:var(--muted)}
+
+td.rev{min-width:300px;font-size:14px}
+.rv{margin:0 0 9px;line-height:1.5}
+.rv b{display:inline-block;min-width:34px;font-weight:600;color:var(--pick)}
+.rv .who{color:var(--muted);font-size:12px}
+.revsrc{color:var(--muted);font-size:12px;margin:0 0 6px}
+.viewline{margin:0 0 6px;font-weight:600}
+.t-friend{border:1.5px dashed var(--hotel);color:var(--hotel);margin-left:6px;margin-top:4px}
+.prev{margin-top:12px;border-top:1px solid var(--line);padding-top:10px;font-size:14px}
+
+/* sights */
+.sights{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:4px 28px}
+.sight{padding:14px 0;border-top:1px solid var(--line)}
+.sight h4{margin:0 0 4px;font-size:17px}
+.sight h4 button{font:inherit;color:var(--ink);background:none;border:0;padding:0;cursor:pointer;text-align:left}
+.sight .dist{color:var(--muted);font-size:13px;margin:0 0 4px}
+.sight p{margin:0;font-size:15px}
+
+.sight .head{display:flex;align-items:baseline;gap:8px;width:100%;font:inherit;background:none;border:0;padding:0;color:var(--ink);cursor:pointer;text-align:left}
+.sight .sn{font-size:17px;font-weight:600}
+.sight .cn,.cnn{font-size:13px;color:var(--muted);font-weight:400}
+.sight .head::after{content:"+";margin-left:auto;color:var(--muted);font-size:20px;line-height:1}
+.sight.open .head::after{content:"−"}
+.sight .more{display:none;margin-top:10px}
+.sight.open .more{display:block}
+.sight.active{border-top:2px solid var(--sight)}
+.spots{list-style:none;margin:8px 0 0;padding:0;font-size:14px}
+.spots li{padding:5px 0;border-bottom:1px dotted var(--line)}
+.spots b{font-weight:600;margin-right:4px}
+.tomap{font:inherit;font-size:13px;margin-top:12px;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
+
+.hlist{border-top:2px solid var(--ink)}
+.hrow{padding:18px 0 20px;border-bottom:1px solid var(--line)}
+.hrow.mine{background:color-mix(in srgb,var(--pick) 8%,transparent);padding-left:14px;padding-right:14px}
+.htop{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
+.htop h3{margin:0;font-size:18px;font-weight:600;margin-right:4px}
+.htop h3 button{font:inherit;color:var(--ink);background:none;border:0;padding:0;cursor:pointer;text-align:left;border-bottom:1px dashed var(--muted)}
+.htop .tag{margin:0}
+.hfacts{display:flex;flex-wrap:wrap;gap:4px 24px;margin:10px 0 14px;font-size:15px}
+.hfacts div{display:flex;gap:6px;align-items:baseline}
+.hfacts dt{color:var(--muted);font-size:13px}
+.hfacts dd{margin:0;font-weight:500}
+.hbody{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:12px 36px}
+.hbody h4{margin:0 0 6px;font-size:13px;color:var(--muted);font-weight:500}
+.rv.more-r{display:none}
+.revbox.showall .rv.more-r{display:block}
+.morebtn{font:inherit;font-size:13px;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:3px 12px;cursor:pointer}
+.tri{width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:11px solid var(--spot);display:inline-block}
+.tipline{margin:10px 0 0;font-size:14px;padding-left:10px;border-left:2px solid var(--spot)}
+.day p b{font-weight:600}
+@media (max-width:760px){.hbody{grid-template-columns:1fr}}
+
+.crit-h{font-weight:600;margin:0 0 6px}
+.criteria{margin:0 0 12px;padding-left:22px;max-width:72ch;font-size:15px}
+.criteria li{margin:3px 0}
+.criteria-rule{font-size:14px;color:var(--muted);margin:0 0 22px;max-width:72ch}
+.why{margin:10px 0 0}
+.sc{display:flex;flex-wrap:wrap;gap:6px}
+.scc{font-size:13px;border:1.5px solid var(--c);color:var(--ink);border-radius:8px;padding:2px 8px;line-height:1.5}
+.scc b{color:var(--c);font-weight:600}
+.scc small{color:var(--muted);font-size:12px}
+.whyp{margin:8px 0 0;font-size:15px;max-width:78ch}
+.whyp b{font-weight:600;margin-right:6px}
+
+.prep details{border-top:1px solid var(--line);padding:4px 0}
+.prep details:last-of-type{border-bottom:1px solid var(--line)}
+.prep summary{cursor:pointer;list-style:none;display:block;position:relative;padding:10px 30px 10px 0;font-weight:600;font-size:17px}
+.prep summary .cnt{margin-left:8px}
+.prep summary::-webkit-details-marker{display:none}
+.prep summary::after{content:"+";position:absolute;right:2px;top:10px;color:var(--muted);font-size:20px;line-height:1}
+.prep details[open] summary::after{content:"−"}
+.prep .cnt{font-size:13px;font-weight:500;color:var(--muted)}
+.prep .body{padding:0 0 14px;max-width:72ch}
+.chk label{display:flex;gap:10px;align-items:flex-start;padding:6px 0;cursor:pointer;font-size:15px}
+.chk input{accent-color:var(--pick);width:18px;height:18px;margin:3px 0 0;flex:none}
+.chk small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.prep ol.steps{margin:4px 0 10px;padding-left:22px;font-size:15px}
+.prep ol.steps li{margin:4px 0}
+.prep p{margin:6px 0;font-size:15px}
+.sub a{color:var(--ink)}
+
+.controls{align-items:center}
+.seg{display:inline-flex;flex-wrap:wrap;align-items:center;gap:2px;border:1px solid var(--line);border-radius:999px;padding:3px}
+.seg .cl{font-size:13px;color:var(--muted);padding:0 6px 0 10px}
+.controls .seg button{border:0;padding:5px 12px}
+.tog{display:inline-flex;gap:7px;align-items:center;font-size:14px;cursor:pointer;margin-left:4px}
+.tog input{accent-color:var(--hotel);width:16px;height:16px;margin:0}
+.vcap{font-size:13px;color:var(--muted);margin:0 0 10px;max-width:70ch}
+
+.vsum{margin:0 0 28px;border-top:2px solid var(--ink)}
+.vrow{display:grid;grid-template-columns:140px minmax(0,220px) 1fr;gap:6px 18px;padding:11px 0;border-bottom:1px solid var(--line);align-items:baseline}
+.vrow .tag{margin:0;justify-self:start}
+.vrow button{font:inherit;font-weight:600;background:none;border:0;padding:0;color:var(--ink);text-align:left;cursor:pointer;border-bottom:1px dashed var(--muted)}
+.vrow p{margin:0;font-size:15px}
+.whyp{background:color-mix(in srgb,var(--line) 40%,transparent);padding:8px 12px;border-radius:8px}
+@media (max-width:640px){.vrow{grid-template-columns:auto 1fr}.vrow p{grid-column:1/-1}}
+
+.vrow{grid-template-columns:minmax(150px,210px) 1fr}
+.vl{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.vr .sc{margin-bottom:6px}
+.vr p{margin:0;font-size:15px}
+.rvh{font-size:13px;font-weight:600;color:var(--pick);margin:10px 0 4px}
+.rvh.bad{color:var(--warn)}
+details.morer summary{cursor:pointer;font-size:13px;color:var(--muted);margin-top:6px}
+.excl{margin-top:18px;border-top:1px solid var(--line)}
+.excl>summary{cursor:pointer;padding:12px 0;font-weight:600}
+.hrow .links{margin-top:10px}
+@media (max-width:640px){.vrow{grid-template-columns:1fr}}
+
+.dz{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:4px 32px}
+.dzb{border-top:1px solid var(--line);padding:12px 0}
+.dzb h3{font-size:17px;margin:0 0 6px}
+.dzb ul{margin:0;padding-left:18px;font-size:15px}
+.dzb li{margin:5px 0}
+.ad{display:inline-block;font-size:11px;border:1px solid var(--muted);color:var(--muted);border-radius:4px;padding:0 4px;margin-left:4px;vertical-align:1px}
+.phrase{display:block;margin-top:4px;font-size:15px;color:var(--ink);user-select:all}
+
+.spcat{grid-column:1/-1;font-size:15px;color:var(--muted);margin:20px 0 0;font-weight:600}
+
+.sight .head{flex-direction:column;align-items:flex-start;gap:1px;position:relative;padding-right:26px}
+.sight .head::after{position:absolute;right:0;top:0}
+.sight .cn{font-size:12px}
+.allplaces{margin-top:48px;border-top:2px solid var(--ink)}
+.allplaces>summary{cursor:pointer;padding:14px 0;font-family:"Gowun Batang","Nanum Myeongjo","AppleMyungjo","Batang",Georgia,serif;font-weight:700;font-size:clamp(20px,3.6vw,26px)}
+.allplaces section{margin-top:24px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 12px}
+.tabs button{font:inherit;font-size:15px;font-weight:600;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:10px;padding:6px 14px;cursor:pointer;text-align:left;line-height:1.3}
+.tabs button small{display:block;color:var(--muted);font-size:12px;font-weight:400}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tabs button[aria-selected="true"] small{color:var(--bg);opacity:.75}
+.dayhead{margin:0 0 8px;max-width:72ch}
+.dayhead b{font-family:"Gowun Batang","Nanum Myeongjo","AppleMyungjo","Batang",Georgia,serif;font-size:20px;display:block}
+.dayhead span{color:var(--muted);font-size:14px}
+.stops{list-style:none;margin:0;padding:0;border-bottom:1px solid var(--line)}
+.stop{border-top:1px solid var(--line)}
+.stop>.sh{display:grid;grid-template-columns:32px 1fr 20px;gap:12px;align-items:start;width:100%;background:none;border:0;padding:12px 0;font:inherit;color:var(--ink);text-align:left;cursor:pointer}
+.snum{width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--bg);display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;margin-top:1px}
+.stop.open .snum{background:var(--hotel)}
+.stitle{display:block}
+.stime{font-size:12px;color:var(--muted);margin-right:6px;font-weight:600}
+.stitle b{font-weight:600;font-size:16px}
+.scn{display:block;font-size:12px;color:var(--muted)}
+.snote{display:block;font-size:14px;color:var(--muted);margin-top:2px}
+.sh::after{content:"+";color:var(--muted);font-size:20px;line-height:1}
+.stop.open .sh::after{content:"−"}
+.sbody{display:none;padding:0 0 18px 44px;max-width:74ch}
+.stop.open .sbody{display:block}
+.sbody>p{margin:0 0 8px}
+.photo-btn{display:inline-block;font-size:14px;font-weight:600;border:1.5px solid var(--sight);color:var(--ink);border-radius:999px;padding:5px 14px;text-decoration:none;margin:6px 6px 2px 0}
+.alts{margin-top:16px;padding:10px 14px;background:var(--panel);border-radius:10px}
+.alts h4{font-size:13px;color:var(--muted);margin:0 0 4px;font-weight:600}
+.alt{padding:8px 0;border-top:1px dotted var(--line)}
+.alt:first-of-type{border-top:0}
+.alt b{font-weight:600}
+.acat{font-size:12px;color:var(--muted);margin-left:6px}
+.alt p{margin:2px 0 2px;font-size:14px}
+.alt .links{margin-top:4px}
+.alt .links a,.alt .links button{font-size:13px}
+.lk{font:inherit;font-size:14px;background:none;border:0;padding:0;color:var(--ink);cursor:pointer;border-bottom:1.5px solid var(--hotel)}
+#route{pointer-events:none}
+@media (max-width:520px){.sbody{padding-left:0}}
+
+.planwrap{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:24px;align-items:start}
+.daymap{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);background:var(--panel);border-radius:14px;padding:8px}
+#dmap{display:block;width:100%;aspect-ratio:1/1}
+.dmapnote{font-size:12px;color:var(--muted);margin:6px 4px 2px}
+.dpin{cursor:pointer}
+.dpin .pd{fill:var(--ink);stroke:var(--halo);stroke-width:2}
+.dpin.on .pd{fill:var(--hotel)}
+.dpin .ring{fill:none;stroke:var(--hotel);stroke-width:3;opacity:0;transition:opacity .2s}
+.dpin.on .ring{opacity:1}
+.dpin .num{font-size:11px;font-weight:700;fill:var(--bg);text-anchor:middle;dominant-baseline:central}
+.dpin .dlabel{display:none;font-size:13px;font-weight:700;fill:var(--ink);paint-order:stroke;stroke:var(--halo);stroke-width:5px;stroke-linejoin:round}
+.dpin.on .dlabel{display:inline}
+#dpins.focus .dpin:not(.on){opacity:.3}
+#dpins.focus .dhome:not(.on){opacity:.5}
+.dhome.on circle{stroke:var(--ink);stroke-width:3}
+.dhome circle{fill:var(--hotel);stroke:var(--halo);stroke-width:2}
+.dhome text{font-size:12px;font-weight:600;fill:var(--ink);paint-order:stroke;stroke:var(--halo);stroke-width:4px;stroke-linejoin:round}
+.leg{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;padding:7px 0 7px 44px;font-size:13px;color:var(--muted);position:relative}
+.leg::before{content:"";position:absolute;left:12px;top:0;bottom:0;border-left:2px dotted var(--line)}
+.lgm{font-size:12px;font-weight:600;border-radius:6px;padding:0 7px;border:1.5px solid currentColor;white-space:nowrap}
+.leg-walk .lgm{color:var(--pick)}
+.leg-taxi .lgm{color:var(--warn)}
+.leg-metro .lgm,.leg-both .lgm{color:var(--sight)}
+@media (max-width:820px){.planwrap{grid-template-columns:1fr}.daymap{position:sticky;top:env(safe-area-inset-top,0px);z-index:3;order:-1;box-shadow:0 8px 14px -10px rgba(0,0,0,.35)}#dmap{aspect-ratio:auto;height:32vh}.dmapnote{display:none}}
+
+.tomobile{margin:12px 0 0;font-size:15px;color:var(--muted)}
+.tomobile a{color:var(--ink);font-weight:600}
+.trip{margin-top:14px;padding:12px 14px;background:var(--panel);border-radius:12px;max-width:62ch}
+.trip p{margin:0 0 6px;font-size:15px}
+.trip p:last-child{margin:0}
+.trip b{display:inline-block;min-width:3.4em;color:var(--muted);font-weight:600}
+.jump{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.jump a{font-size:15px;font-weight:600;color:var(--ink);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:7px 14px;background:var(--bg)}
+.bigmap{margin-top:48px;border-top:2px solid var(--ink)}
+.bigmap>summary{cursor:pointer;padding:14px 0;font-family:"Gowun Batang","Nanum Myeongjo","AppleMyungjo","Batang",Georgia,serif;font-weight:700;font-size:clamp(20px,3.6vw,26px)}
+.bigmap>summary span{display:block;font-family:inherit;font-size:14px;font-weight:400;color:var(--muted);font-family:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif}
+.bigmap .mapbox{margin-top:4px}
+#hotels .verdict{margin:6px 0 18px}
+@media (max-width:640px){
+  body{font-size:17px;line-height:1.65}
+  .wrap{padding:20px 16px 48px}
+  h1{font-size:30px;max-width:none}
+  .trip b{display:block;min-width:0;font-size:13px}
+  h2{font-size:25px}
+  section{margin-top:40px}
+  .lead{font-size:16px}
+  .trip p{font-size:15.5px}
+  .jump{gap:6px}
+  .jump a{font-size:14.5px;padding:7px 12px}
+  .tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+  .tabs button{padding:8px 0;text-align:center;font-size:16px}
+  .dayhead b{font-size:21px}
+  .dayhead span{font-size:15px}
+  .stop>.sh{grid-template-columns:30px 1fr 18px;gap:10px;padding:14px 0}
+  .stitle b{font-size:17px}
+  .stime{font-size:13px}
+  .scn{font-size:13px}
+  .sbody{padding:0 0 18px}
+  .sbody>p{font-size:16px}
+  .leg{font-size:14.5px;padding:8px 0 8px 40px}
+  .lgm{font-size:13px}
+  .photo-btn{font-size:15px;padding:8px 14px}
+  .links a,.lk{font-size:15px}
+  .alts{padding:10px 12px}
+  .alt p{font-size:15px}
+  #dmap{height:30vh}
+  .daymap{padding:6px;border-radius:0 0 14px 14px;margin:0 -16px;border-radius:0}
+  .tipline{font-size:15px}
+  .dzb ul{font-size:16px}
+  .dzb h3{font-size:18px}
+  .vrow{gap:6px}
+  .vr p{font-size:16px}
+  .scc{font-size:13.5px}
+  .hfacts{grid-template-columns:1fr 1fr}
+  .rv{font-size:15.5px}
+  .prep label{font-size:16px}
+  .note{font-size:14px}
+}
+
+/* days */
+.days{display:grid;gap:0}
+.day{display:grid;grid-template-columns:92px 1fr;gap:14px;padding:14px 0;border-top:1px solid var(--line)}
+.day .d{font-family:"Gowun Batang","Nanum Myeongjo","AppleMyungjo","Batang",Georgia,serif;font-weight:700;font-size:18px;line-height:1.3}
+.day .d small{display:block;font-family:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-weight:400;font-size:13px;color:var(--muted)}
+.day p{margin:0}
+.note{font-size:13px;color:var(--muted);margin-top:40px;max-width:70ch}
+
+@media (max-width:820px){
+  .mapbox{grid-template-columns:1fr}
+  #map{aspect-ratio:1/1}
+}
+@media (max-width:520px){
+  .wrap{padding:20px 14px 44px}
+  .day{grid-template-columns:72px 1fr}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>상하이 여행</h1>
+    <p class="sub">2026년 12월 14일(월)~18일(금), 4박 5일, 2명</p>
+    <div class="trip">
+      <p><b>가는 편</b> 김포 08:25 → 홍차오 09:45<br>김해 08:35 → 푸둥 09:40</p>
+      <p><b>숙소</b> 상하이 번드 사우스 차이나 하버 뷰 호텔 (북와이탄, 예약 완료) · 다른 후보와 비교는 <a href="#hotels">숙소 비교</a>에서</p>
+    </div>
+    <nav class="jump" aria-label="바로가기">
+      <a href="#plan">일정</a><a href="#disney">디즈니</a><a href="#delivery">배달</a><a href="#bigmap">전체 지도</a><a href="#hotels">숙소 비교</a><a href="#prep">준비물</a>
+    </nav>
+    <p class="tomobile">휴대폰에서는 <a href="./">휴대폰용 페이지</a>가 더 보기 편해요.</p>
+  </header>
+
+  <section id="plan">
+    <h2>일정</h2>
+    <p class="lead">날짜를 고르면 그날 갈 곳이 순서대로 나와요. 장소를 누르면 설명, 사진, 근처 대안이 펼쳐지고 그날 지도에서 위치가 강조돼요. 장소 사이에는 거리와 추천 이동 수단이 나와요. 지금 예약한 숙소(북와이탄) 기준이에요.</p>
+    <div class="tabs" role="tablist" id="dayTabs"></div>
+    <p class="dayhead" id="dayHead"></p>
+    <div class="planwrap">
+      <ol class="stops" id="stops"></ol>
+      <div class="daymap">
+        <svg id="dmap" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="그날 동선 지도">
+          <path id="driver" fill="none" stroke="var(--river)" stroke-width="0.32" stroke-linecap="round" stroke-linejoin="round"></path>
+          <path id="droute" fill="none" stroke="var(--hotel)" stroke-width="2.5" stroke-dasharray="6 5" vector-effect="non-scaling-stroke" stroke-linejoin="round"></path>
+          <g id="dpins"></g>
+        </svg>
+        <p class="dmapnote">번호는 왼쪽 일정 순서예요. 누르면 해당 장소가 펼쳐져요. 분홍 점선이 그날 동선이고, 이동 시간은 직선거리로 계산한 대략적인 값이에요.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="disney">
+    <h2>디즈니랜드 (12/17 목)</h2>
+    <p class="lead">디즈니 관련 정보는 여기 다 모았어요. 릴스에서 가져온 내용 중 광고 게시물은 <span class="ad">광고</span>로 표시했어요.</p>
+    <div class="dz">
+      <div class="dzb">
+        <h3>기본 정보</h3>
+        <ul>
+          <li><b>이동</b>: 숙소(북와이탄)에서 택시 약 40~50분, 지하철은 11호선 디즈니역까지 1시간 이상. 중국어 이름 上海迪士尼乐园.</li>
+          <li><b>운영 시간</b>: 12월 평일은 보통 8:30~21:30. 전날 공식 앱에서 확인하세요.</li>
+          <li><b>티켓</b>: 날짜 지정이라 미리 예매. 클룩, 트립닷컴 할인 쿠폰 안내 릴스가 있었어요 <span class="ad">광고</span></li>
+          <li><b>시즌</b>: 개장 10주년이고, 12월 1일부터 겨울 시즌 행사라 미키와 친구들이 겨울 복장으로 나와요.</li>
+        </ul>
+      </div>
+      <div class="dzb">
+        <h3>탈 것, 볼 것</h3>
+        <ul>
+          <li><b>주토피아: 핫 퍼슈트</b>: 줄이 가장 길고, 대기 줄 자체가 볼거리예요.</li>
+          <li><b>트론 라이트사이클</b>, <b>로어링 래피즈</b>: 주토피아와 함께 인기 3대장.</li>
+          <li><b>캐리비안의 해적</b>: 상하이에만 있는 버전. <b>곰돌이 푸</b>도 인기예요.</li>
+          <li><b>성 앞 야간 쇼</b>: 밤 9시쯤 시작. 좋은 자리는 8시부터 앉아서 기다렸다는 후기.</li>
+        </ul>
+      </div>
+      <div class="dzb">
+        <h3>릴스에서 모은 팁</h3>
+        <ul>
+          <li><b>DPA(유료 우선 탑승)</b>: 1일권 + DPA 2개(주토피아, 푸)가 1인 약 14.2만원이었고, 주토피아를 5분 만에 탔다는 후기. 다만 인기 3대장을 한 번에 묶은 DPA 상품은 없대요.</li>
+          <li><b>주토피아 팬이라면 DPA는 다시 생각</b>: 빠른 줄에는 일반 대기 줄에 있는 포토스팟이 없대요 <span class="ad">광고</span></li>
+          <li><b>혼잡도 예측</b>: 위챗 미니프로그램 ‘神奇等候时间’에서 미리 확인 <span class="ad">광고</span></li>
+          <li><b>10주년 작은 선물</b>: 회색, 노란색, 파란색 유니폼에 태블릿을 든 직원에게 말을 걸면 스티커나 배지를 줄 수 있대요 <span class="ad">광고</span></li>
+          <li><b>늦게 가도 괜찮아요</b>: 오후 2시에 들어가서도 DPA를 써서 놀이기구 7개와 야간 쇼까지 봤다는 후기.</li>
+        </ul>
+      </div>
+      <div class="dzb">
+        <h3>가져가면 안 되는 것</h3>
+        <ul>
+          <li>셀카봉, 삼각대, 캐리어, 유리병, 스프레이류</li>
+          <li>일부 식품도 제한이 있어요. 입장할 때 소지품 검사를 해요 <span class="ad">광고</span></li>
+          <li>정확한 목록은 공식 앱에서 한 번 더 확인하세요.</li>
+        </ul>
+        <div class="links"><a target="_blank" rel="noopener" href="https://maps.apple.com/?ll=31.1434,121.657&amp;q=%E4%B8%8A%E6%B5%B7%E8%BF%AA%E5%A3%AB%E5%B0%BC%E4%B9%90%E5%9B%AD">애플 지도</a><a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&amp;query=31.1434%2C121.657">구글 지도</a></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="delivery">
+    <h2>배달 음식</h2>
+    <p class="lead">숙소에서 시켜 먹을 때 필요한 내용이에요. 앱은 메이투안(美团)을 써요.</p>
+    <div class="dz">
+      <div class="dzb">
+        <h3>주문할 때 꼭</h3>
+        <ul>
+          <li>요청사항(备注)에 아래 문구를 붙여넣어요. ‘중국 전화번호가 없으니 로봇에게 바로 배달해 달라’는 뜻이에요. 안 쓰면 연락이 안 돼서 아무 데나 두고 가는 경우가 있대요. 길게 눌러 복사하세요.<span class="phrase">没有国内手机号 直接送到机器人就OK啦</span></li>
+          <li>숙소 후기 기준으로 베이스플러스는 배달 보관함과 로봇, JI 호텔은 직원이 방까지 가져다줬대요. 다른 숙소는 체크인할 때 배달 받는 방법을 물어보세요.</li>
+          <li><b>밀크티</b>: 차지(霸王茶姬, CHAGEE) 같은 중국 밀크티는 숙소에서 배달로 많이 시켜 먹어요. 중국에만 있는 메뉴를 골라 보라는 추천이에요.</li>
+        </ul>
+      </div>
+      <div class="dzb">
+        <h3>털게(大闸蟹) 시켜 먹기</h3>
+        <ul>
+          <li><b>검색어</b>: 阳澄湖大闸蟹(양청호 털게). 리뷰가 좋고 시장 같은 사진이 있는 가게를 고르래요. 게시물 작성자는 푸둥의 阿强大闸蟹에서 시켰어요.</li>
+          <li><b>꼭 清蒸(쥔서 보내 주는 것)인지 확인</b>하세요. 같은 가게에서 살아 있는 게도 팔아요.</li>
+          <li><b>같이 시킬 것</b>: 蟹醋(게 식초)와 姜丝(생강채).</li>
+          <li><b>댓글 의견</b>: 한 마리에 1~2만원은 하니 너무 싸면 의심하라는 말, 양청호산은 가짜가 많고 태호(太湖)산도 맛은 비슷하다는 말, 느끼하고 기름진 맛이었다는 말이 있어요.</li>
+          <li><b>추천 타이밍</b>: 디즈니 다녀온 목요일 밤처럼 지친 날, 숙소에서 먹기 좋아요.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <details class="bigmap" id="bigmap">
+    <summary>전체 지도 <span>숙소 후보, 관광지, 인스타 장소를 한 번에</span></summary>
+  <div class="mapbox">
+    <div>
+      <div class="controls">
+        <div class="seg" role="group" aria-label="지도 범위">
+          <span class="cl">범위</span>
+          <button type="button" data-view="bund" aria-pressed="false">와이탄 확대</button>
+          <button type="button" data-view="core" aria-pressed="true">시내 중심</button>
+          <button type="button" data-view="all" aria-pressed="false">후보 전체</button>
+          <button type="button" data-view="wide" aria-pressed="false">디즈니까지</button>
+        </div>
+        <label class="tog"><input type="checkbox" id="onlyHotel">숙소만 보기</label>
+      </div>
+      <p class="vcap" id="vcap"></p>
+      <div class="mapframe">
+        <svg id="map" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="상하이 숙소 후보와 관광지 위치 약도">
+          <g id="rings"></g>
+          <path id="river" fill="none" stroke="var(--river)" stroke-linecap="round" stroke-linejoin="round"></path>
+          <path id="route" fill="none" stroke="var(--hotel)" stroke-width="2" stroke-dasharray="5 5" vector-effect="non-scaling-stroke" stroke-linejoin="round"></path>
+          <g id="areas"></g>
+          <g id="pins"></g>
+        </svg>
+      </div>
+      <div class="legend">
+        <span><i class="dot"></i>숙소 후보</span>
+        <span><i class="dia"></i>관광지</span>
+        <span><i class="tri"></i>인스타에서 찾은 곳</span>
+        <span>점선 원은 와이탄에서 5km, 10km</span>
+      </div>
+    </div>
+    <aside class="panel" id="panel" aria-live="polite"></aside>
+  </div>
+  </details>
+
+  <section id="hotels">
+    <h2>숙소 후보 6곳 비교</h2>
+    <p class="verdict"><b>결론:</b> 새 우선순위(이동 편의성, 가격, 방, 뷰 순)로 보면 베이스플러스가 1순위예요. 이동이 가장 편한 건 JI 호텔이지만 방 문제가 커서 대안이고, 지금 예약한 차이나 하버 뷰는 뷰는 좋지만 가장 비싸요.</p>
+    <p class="lead">가격은 세금 포함, 인당은 2명 기준이에요. 숙소 이름을 누르면 지도에서 위치를 보여줘요.</p>
+    <p class="crit-h">판정 기준 (중요한 순서)</p>
+    <ol class="criteria">
+      <li><b>이동 편의성</b>: 어느 관광지든 가기 편한지. 지하철역 거리, 주요 관광지와 디즈니까지 거리, 주변 핫플을 봤어요.</li>
+      <li><b>가격</b>: 4박 총액. 기존 예약(55만원)과 비교했어요.</li>
+      <li><b>방 컨디션</b>: 평점, 방 크기, 후기에 나온 문제(위생, 소음, 와이파이 등).</li>
+      <li><b>시티뷰</b>: 가능하면. 창문과 전망.</li>
+    </ol>
+    <p class="criteria-rule">1번을 크게 못 채우면 제외하고, 1~3번을 고르게 채울수록 위로 올렸어요. 색 칩은 기준별 평가예요. 초록은 좋음, 주황은 보통, 빨강은 아쉬움, 회색은 정보 없음이에요.</p>
+    <p class="crit-h">판정 요약</p>
+    <div class="vsum" id="vsum"></div>
+    <div class="hlist" id="hotelRows"></div>
+    <details class="excl" id="exclBox">
+      <summary>제외된 숙소 3곳 자세히 보기</summary>
+      <div class="hlist" id="hotelRowsEx"></div>
+    </details>
+  </section>
+
+  <details class="allplaces">
+    <summary>전체 장소 모아보기 (일정에 없는 후보 포함)</summary>
+  <section>
+    <h2>가 볼 곳</h2>
+    <p class="lead">회색 글자는 택시 기사에게 보여줄 중국어 이름이에요.</p>
+    <div class="sights" id="sightList"></div>
+  </section>
+
+  <section>
+    <h2>인스타 릴스에서 찾은 곳</h2>
+    <p class="lead">지도에는 보라색 세모로 표시돼요. 영업시간과 행사 기간은 게시물 기준이에요.</p>
+    <div class="sights" id="spotList"></div>
+  </section>
+  </details>
+
+  <section class="prep" id="prep">
+    <h2>여행 준비물</h2>
+    <p class="lead">항목을 눌러 펼치고, 챙긴 건 체크하세요. 체크 표시는 각자 폰에만 저장돼요. 길 찾기와 지하철 내용은 보내 준 블로그 후기를 참고했어요.</p>
+
+    <details open>
+      <summary>입국과 예약 <span class="cnt"></span></summary>
+      <div class="body chk">
+        <label><input type="checkbox" data-k="passport"><span>여권 (유효기간 확인)<small>한국 일반여권은 2026년 12월 31일까지 무비자 30일 체류 가능해서 우리 일정은 비자 없이 돼요. 호텔 체크인도 여권으로 해요.</small></span></label>
+        <label><input type="checkbox" data-k="arrival"><span>입국신고서 미리 작성<small>공식 사이트나 알리페이(모두 보기 → 입국 → Foreigner Service → Arrival Card)에서 여권 사진, 체류 기간, 목적, 직업, 호텔 정보를 넣고 QR을 받아 두면, 입국심사대에서 보여주기만 하면 돼요. 호텔 정보는 최종 숙소로 적으세요.</small></span></label>
+        <label><input type="checkbox" data-k="disney"><span>디즈니랜드 티켓 예매 (12/17 목)<small>날짜 지정 티켓. 공식 앱도 깔아 두면 당일 운영 시간과 대기 시간을 볼 수 있어요.</small></span></label>
+        <label><input type="checkbox" data-k="xmas"><span>크리스마스 마켓 예약: <b>12월 16일(수)</b><small>월, 화는 휴무라 우리 일정에서 갈 수 있는 날은 수요일뿐이에요(목요일은 디즈니). 위챗 검색창에서 ‘GermanEvents德华社’ 미니프로그램을 열어 예약하고, 결제는 위챗페이에 해외 카드를 연결해서 해요. 예매 30위안, 현장 40위안.</small></span></label>
+        <label><input type="checkbox" data-k="tower"><span>상하이 타워 전망대 예매 (선택, 12/15 화 해 질 녘)</span></label>
+        <label><input type="checkbox" data-k="room"><span>숙소 예약 방 타입과 취소 기한 확인<small>시티뷰 방이 맞는지, 드라이기가 있는 방인지도 같이 봐 두세요.</small></span></label>
+      </div>
+    </details>
+
+    <details>
+      <summary>휴대폰과 앱 (출발 전 한국에서) <span class="cnt"></span></summary>
+      <div class="body chk">
+        <label><input type="checkbox" data-k="esim"><span>로밍형 eSIM (‘VPN 불필요’ 표시 상품)<small>없으면 구글맵, 파파고, 카톡이 전부 안 돼요.</small></span></label>
+        <label><input type="checkbox" data-k="alipay"><span>알리페이 + 해외 카드 등록<small>결제, 지하철 QR, 디디 택시에 다 써요. 두 사람 모두 만들어 두세요.</small></span></label>
+        <label><input type="checkbox" data-k="amap"><span>가오더 지도 (高德地图)<small>지하철, 버스 경로와 정확한 위치는 여기서. 구글맵은 자동차와 도보 시간만 나오고 폐업한 가게도 그대로라는 후기예요. 가오더 즐겨찾기는 중국 번호가 필요해져서, 저장은 구글맵이나 이 페이지로 해요.</small></span></label>
+        <label><input type="checkbox" data-k="didi"><span>디디 (DiDi) 택시<small>가장 싼 옵션은 차가 지저분하거나 담배 냄새가 심하다는 후기가 있어서, 한 단계 위 옵션을 고르는 걸 추천해요.</small></span></label>
+        <label><input type="checkbox" data-k="papago"><span>파파고 (번역)<small>대부분 이것만으로도 대화가 통해요.</small></span></label>
+        <label><input type="checkbox" data-k="wechat"><span>위챗<small>크리스마스 마켓 예약, 호텔 문의, 일부 식당 주문에 써요.</small></span></label>
+        <label><input type="checkbox" data-k="meituan"><span>메이투안 (배달)<small>요청사항 문구와 털게 주문 팁은 <a href="#delivery">배달 음식</a> 섹션에 있어요.</small></span></label>
+        <label><input type="checkbox" data-k="review"><span>다중뎜핑, 샤오홍슈 (선택)<small>맛집 후기는 다중뎜핑, 새로 생긴 핫플과 사진은 샤오홍슈.</small></span></label>
+      </div>
+    </details>
+
+    <details>
+      <summary>길 찾기와 지하철</summary>
+      <div class="body">
+        <p><b>길 찾기:</b> 이 페이지의 회색 중국어 이름을 복사해 가오더 지도에 붙여넣고 길찾기를 누르면, 탈 호선과 역 한자가 나와요. 디디를 부를 때도 같은 이름을 붙여넣으면 돼요.</p>
+        <p><b>지하철:</b> 각자 알리페이에서 교통 QR을 발급해 개찰구에 찍고 타요. 발권기를 쓸 땐 English로 바꾸고, 호선(10호선부터는 오른쪽 아래 버튼), 도착역, 매수(2장 확인)를 고른 뒤 알리페이로 화면 QR을 찍어 결제해요. 표는 당일만 쓸 수 있고 환불이 안 돼요.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>짐 챙기기 <span class="cnt"></span></summary>
+      <div class="body chk">
+        <label><input type="checkbox" data-k="toiletry"><span>칫솔, 치약, 면도기, 빗<small>예약한 호텔은 일회용품을 주지 않아요.</small></span></label>
+        <label><input type="checkbox" data-k="dryer"><span>드라이기 (예약 방에 없으면)<small>가장 싼 싱글룸은 편의시설 목록에 드라이기가 안 보여요.</small></span></label>
+        <label><input type="checkbox" data-k="filter"><span>샤워 필터 (물에 예민하면)<small>상하이 숙소 후기에 필터가 하루 만에 노래졌다는 말이 있어요.</small></span></label>
+        <label><input type="checkbox" data-k="warm"><span>따뜻한 옷<small>12월이라 디즈니 야외 대기와 와이탄 강바람에 대비해요.</small></span></label>
+        <label><input type="checkbox" data-k="battery"><span>보조배터리<small>지도, 결제, 지하철을 전부 폰으로 해서 배터리가 빨리 달아요.</small></span></label>
+        <label><input type="checkbox" data-k="meds"><span>상비약, 비상용 현금 조금 (위안)</span></label>
+      </div>
+    </details>
+  </section>
+
+  <p class="note">지도는 위치 관계를 보여주는 약도예요. 가격과 인스타 정보는 2026년 11월 중순 기준이고, 관광지 거리와 일정은 지금 예약한 숙소(북와이탄) 기준이에요.</p>
+</div>
+
+<script>
+(function(){
+  var LON0=121.37, LAT0=31.26, KX=95.2, KY=110.57;
+  function xy(lat,lon){return [(lon-LON0)*KX,(LAT0-lat)*KY];}
+  function gmap(lat,lon,name){return "https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(lat+","+lon);}
+
+  var BUND=[31.2402611,121.490577];
+
+  var places=[
+    {id:"mine",type:"hotel",name:"차이나 하버 뷰 호텔",full:"상하이 번드 사우스 차이나 하버 뷰 호텔",short:"기존 예약",lat:31.2445891,lon:121.4915797,dir:"r",showAll:false,
+     verdict:"pick",verdictText:"유지 추천",price:"55만원 (예약 완료)",bund:"490m",view:"창문 있음, 시티뷰",rating:"아고다 7.7 (780건)",brief:"와이탄 도보권과 창문·뷰를 둘 다 갖춘 유일한 후보예요. 가장 비싸고(55만원) 낡은 게 단점이지만, 다른 곳으로 바꾸면 둘 중 하나를 포기해야 해요.",sc:[["위치","좋음",2,"와이탄 도보 5분"],["창문·뷰","좋음",2,"시티뷰"],["방","보통",1,"7.7점, 2014년 리모델링"],["가격","아쉬움",0,"55만원, 가장 비쌀"]],why:"1, 2번 기준을 둘 다 채우는 유일한 후보예요. 가장 비싸고 낡은 게 단점이지만, 다른 후보는 와이탄 도보권과 창문·뷰 중 하나를 포기해야 해요.",pn:"약 6.9만원",pt:"27.5만원",friend:false,revSrc:"보내 준 아고다 리뷰에서",reviews:[{s:"9.6",w:"산호, 26년 10월, 패밀리 리버뷰",t:"셋이 쓰기 좋고 위치와 뷰 만족, 청소는 조금 아쉬움"},{s:"8.8",w:"Park, 26년 10월, 패밀리 리버뷰",t:"리버뷰 방에서 밤에 동방명주가 잘 보임, 난징동루 초입까지 도보 15분 안팎"},{s:"8.8",w:"Yeong, 26년 10월, 시티뷰 싱글",t:"와이탄 근처라 위치와 뷰가 좋고 가격도 합리적"},{s:"6.8",w:"이문영, 26년 8월, 디럭스 시티뷰",t:"예약과 다른 방을 받아 프런트에서 바로잡음, 위치와 전망은 괜찮음"},{s:"5.6",w:"Deok, 26년 5월, 시티뷰 싱글",t:"방음이 약하고 에어컨을 켜도 습함"},{s:"4.8",w:"BYUNGKUN, 26년 10월",t:"직원은 친절하지만 방과 조식 위생이 별로"}],
+     pros:["와이탄, 난징동루까지 걸어서 이동","방에서 시티뷰 야경","방이 넓은 편(32㎡~)","편의점 80m"],
+     cons:["2014년 리모델링이라 낡은 느낌","위생, 방음 아쉽다는 후기","지하철역 도보 12~14분","일회용품(칫솔 등) 없음"],
+     tip:"체크인할 때 예약한 시티뷰 방이 맞는지 확인하고, 고층으로 요청해 보세요.",
+     agoda:"https://www.agoda.com/ko-kr/shanghai-bund-south-china-harbour-view-hotel/hotel/shanghai-cn.html?site_id=1770664&adults=2&rooms=1&checkIn=2026-12-14&checkOut=2026-12-18&los=4"},
+    {id:"ji",type:"hotel",name:"JI 호텔 쓰촨중루",full:"JI 호텔 상하이 더 번드 쓰촨 중 로드",short:"JI 호텔",lat:31.241936,lon:121.4860975,dir:"t",showAll:false,
+     verdict:"maybe",verdictText:"보류",price:"약 45만원 (추정)",bund:"460m",view:"기본 방은 창문 없음",rating:"아고다 8.2 (365건)",brief:"위치는 기존 예약과 같지만 기본 방에 창문이 없고 방이 좁아요. 10만원 아끼려고 창문·뷰를 포기할 건 아니라서 보류. 창문 있는 방을 55만원보다 싸게 구하면 다시 봐요.",sc:[["위치","좋음",2,"와이탄 460m"],["창문·뷰","아쉬움",0,"기본 방 창문 없음"],["방","아쉬움",0,"15~20㎡, 냉장고 없음, 데이터 문제 후기"],["가격","보통",1,"약 45만원, 10만원 절약"]],why:"위치는 기존 예약과 같지만 창문이 없고 방이 좁아요. 10만원을 아끼는 대신 2번 기준을 포기해야 해서 보류예요. 창문 있는 방을 55만원보다 싸게 구할 수 있다면 다시 볼 만해요.",pn:"약 5.6만원",pt:"약 22.5만원",friend:true,revSrc:"보내 준 아고다 리뷰에서",reviews:[{s:"9.6",w:"Vicky, 26년 3월, 퀸룸 4박",t:"동방명주, 난징동루 가깝고 1분 거리에 편의점, 방은 작고 소음에 약하지만 깨끗함"},{s:"10",w:"DOYEON, 26년 6월, 퀸룸 A",t:"좁지만 캐리어 두 개는 펼 수 있음, 창문 있는 방이면 동방명주가 보임"},{s:"10",w:"JIEUN, 26년 3월",t:"위챗으로 소통 편함, 동방명주 보이는 방으로 업그레이드 받음, 주변 공사로 어두운 편"},{s:"8.4",w:"Sutthi, 26년 4월",t:"방은 작지만 조금 추가하면 업그레이드 가능, 조용함"},{s:"8.4",w:"Miyoung, 26년 5월",t:"방 안에서 데이터, 와이파이가 전혀 안 됨, 냉장고 없음"}],
+     pros:["와이탄 바로 앞, 난징둥루역 460m","깔끔하다는 평(청결 8.6)"],
+     cons:["방이 15~20㎡로 좁음","냉장고 없음","방 안에서 데이터, 와이파이가 안 됐다는 후기","창문 있는 방은 추가 요금 업그레이드"],
+     tip:"창문 있는 방을 몇 만원 추가로 구할 수 있을 때만 고려할 만해요.",
+     agoda:"https://www.agoda.com/sh-app/2xlOpog0PWI"},
+    {id:"base",type:"hotel",name:"베이스플러스 빈장",full:"베이스플러스-빈장 서비스드 아파트",short:"베이스플러스",lat:31.205236,lon:121.49163,dir:"r",showAll:true,
+     verdict:"maybe",verdictText:"예산 우선이면 대안",price:"약 30만원",bund:"약 4.6km",view:"창문 있음",rating:"아고다 8.8 (630건)",brief:"방과 가격은 후보 중 최고(25만원 절약)지만 와이탄에서 4.6km라 매일 택시를 타야 해요. 예산이 위치보다 중요하면 고를 대안이에요.",sc:[["위치","아쉬움",0,"와이탄 4.6km, 매일 택시"],["창문·뷰","보통",1,"창문 있음, 뷰 정보 부족"],["방","좋음",2,"46㎡, 8.8점"],["가격","좋음",2,"약 30만원, 25만원 절약"]],why:"방과 가격은 후보 중 가장 좋지만 1번 기준(와이탄 도보권)을 못 채워요. 매일 택시를 감수하고 25만원을 아끼는 게 더 중요하다면 고를 만한 대안이에요.",pn:"약 3.8만원",pt:"약 15만원",friend:false,revSrc:"보내 준 아고다 리뷰에서",reviews:[{s:"10",w:"JONGHO, 26년 10월, 트윈 2박",t:"방이 아주 넓고 깨끗하고 조용함, 위챗 응대 빠르고 배달 로봇까지, 택시 타면 위치도 괜찮음"},{s:"10",w:"음, 26년 2월, 5박",t:"관광지 어디든 택시 15분 이내, 프런트 친절, 샤워 필터가 하루 만에 노래짐"},{s:"9.2",w:"나라, 26년 1월, 4박",t:"위치는 아쉽지만 택시비가 싸서 감수할 만함"},{s:"9.2",w:"SUJEONG, 26년 1월",t:"에어비앤비 느낌으로 넓음, 인민광장 쪽과는 좀 멂"},{s:"9.2",w:"HUIRYANG, 26년 10월",t:"커튼 먼지와 담배 냄새가 조금 있었지만 공기청정기를 빌려줌"}],
+     pros:["46㎡로 넓고 깨끗함","헬스장, 친절한 응대","가장 좋은 가성비"],
+     cons:["관광지 갈 때마다 택시","밤에 와이탄에서 돌아오기 번거로움"],
+     tip:"특가 요금은 12월 13일 전까지 무료 취소예요.",
+     agoda:"https://www.agoda.com/ko-kr/accom/property?propertyId=37366146&countryId=191&adults=2&children=0&rooms=1&checkIn=2026-12-14&los=4&currencyCode=KRW"},
+    {id:"atwell",type:"hotel",name:"앳웰 스위트 우닝",full:"앳웰 스위트 상하이 우닝 by IHG (上海武宁筑格酒店)",short:"앳웰 스위트",lat:31.244092,lon:121.41577,dir:"r",showAll:true,
+     verdict:"maybe",verdictText:"방 우선이면 대안",price:"약 52만원 (조식 불포함)",bund:"약 7.1km",view:"창문 있음, 21~28층 시티뷰",rating:"아고다 9.5 (2,821건)",brief:"2025년 신축이라 방은 후보 중 최고(평점 9.5)이고 고층 시티뷰도 있어요. 대신 와이탄에서 7.1km라 밤마다 택시나 환승이 필요하고, 기존 예약보다 3만원밖에 안 싸요. 위치보다 방 컨디션이 중요하면 고를 만한 대안이에요.",sc:[["위치","아쉬움",0,"와이탄, 예원 약 7.1km"],["창문·뷰","좋음",2,"21~28층 시티뷰"],["방","좋음",2,"2025년 신축, 9.5점, 냉장고"],["가격","보통",1,"약 52만원, 3만원 절약"]],why:"창문·뷰와 방 컨디션은 기존 예약보다 확실히 좋아요. 하지만 1번 기준(와이탄 도보권)을 못 채우고, 가격 차이도 3만원 정도라 위치를 포기하는 만큼 돈을 아끼지는 못해요. 밤 야경보다 편한 방이 더 중요하다면 대안이에요.",pn:"약 6.6만원",pt:"약 26.2만원",friend:true,revSrc:"보내 준 트립닷컴, 아고다 리뷰에서",reviews:[{s:"9.5",w:"Ho2ho2(한국), 26년 10월, 스탠다드 시티뷰",t:"위치는 조금 애매하지만 14호선이 가까움, 중국에서 보기 힘든 냉장고가 있고 조식도 괜찮음"},{s:"10",w:"ViN3Y, 26년 10월, 프리미엄 시티뷰",t:"시내 중심이 아니라 와이탄, 예원은 지하철 환승이 필요, 붐비는 시간엔 체크인 대기"},{s:"10",w:"Baozaonvzihai, 26년 10월",t:"방음이 좋고 조식이 다양, 아침에 창밖으로 푸둥 고층 빌딩 세 동이 보임, 난방 조절이 안 된 날이 있었음"},{s:"9.5",w:"Brinbulin, 26년 10월",t:"28층 조식당 전망이 좋고 세탁기, 건조기 무료, 엘리베이터가 2대라 좀 느림"},{s:"10",w:"JESSICA(Booking), 26년 1월",t:"깨끗하고 친절하며 가성비 좋음, 시내에서는 좀 멀지만 지하철이 가까움"},{s:"8.0",w:"Yiqiqukanshijie, 26년 10월",t:"방에서 머리카락이 나왔고, 웰컴 과일은 직접 받으러 가야 하는데 안내가 없었음"}],
+     pros:["2025년 신축, 평점 9.5 (리뷰 2,800건 이상)","21~28층 시티뷰, 방마다 냉장고, 무료 세탁실","지하철 14호선 중닝루역 도보권","조식 평이 좋음 (추가 시 1인 88위안)"],
+     cons:["와이탄, 예원 약 7.1km, 환승이 필요하다는 후기","우캉루 4.6km, 신천지 6.1km라 택시로는 가깝지만 걸어갈 거리는 아님","기존 예약보다 3만원만 저렴","엘리베이터가 2대라 붐빌 때 느림"],
+     tip:"아고다에서는 ‘上海武宁筑格酒店 Atwell Suites Shanghai Hotel by IHG’라는 이름으로 뜨지만 주소(우닝루 501호)가 같은 호텔이에요. 현재 요금은 12월 13일 전까지 무료 취소예요.",
+     agoda:"https://www.agoda.com/ko-kr/accom/property?propertyId=74653495&countryId=191&adults=2&children=0&rooms=1&checkIn=2026-12-14&los=4&currencyCode=KRW"},
+    {id:"atour",type:"hotel",name:"아투르 S 톈산루",full:"아투르 S 호텔 상하이 창닝 톈산 로드",short:"아투르 S",lat:31.212336,lon:121.39406,dir:"r",showAll:true,
+     verdict:"no",verdictText:"제외",price:"약 28만원",bund:"약 10km",view:"정보 없음",rating:"구글 3.0 (2건)",brief:"비슷한 가격의 베이스플러스가 더 가깝고 평가도 좋아서 고를 이유가 없어요.",sc:[["위치","아쉬움",0,"와이탄 약 10km"],["창문·뷰","정보 없음",-1,"확인 안 됨"],["방","아쉬움",0,"곰팡이 냄새 후기"],["가격","좋음",2,"약 28만원"]],why:"비슷한 가격의 베이스플러스가 와이탄에 더 가깝고 평가도 좋아서, 여기를 고를 이유가 없어 제외예요.",pn:"약 3.5만원",pt:"약 14만원",friend:false,revSrc:"보내 준 리뷰 없음, 구글 후기 참고",reviews:[{s:"구글",w:"투숙객",t:"방에서 곰팡이 같은 냄새가 심했고 컴플레인 처리도 실망"},{s:"구글",w:"출장객",t:"웨이닝루역, 러우산관루역 각 700m, 출장용으로 무난"}],
+     pros:["저렴함"],
+     cons:["서쪽 창닝구, 관광지와 반대 방향","곰팡이 냄새 후기"],
+     tip:"",
+     agoda:"https://www.agoda.com/ko-kr/accom/property?propertyId=61724083&countryId=191&adults=2&children=0&rooms=1&checkIn=2026-12-14&los=4&currencyCode=KRW"},
+    {id:"yard",type:"hotel",name:"더 야드 부티크",full:"더 야드 부티크 호텔 상하이",short:"더 야드",lat:31.148225,lon:121.38377,dir:"r",showAll:true,
+     verdict:"no",verdictText:"제외",price:"약 25만원",bund:"약 14km",view:"정보 없음",rating:"구글 4.4 (9건)",brief:"가장 싸지만 시내까지 택시로 30~40분이라, 4박 내내 하루 왕복 1시간 이상을 길에서 써요.",sc:[["위치","아쉬움",0,"와이탄 약 14km, 외곽"],["창문·뷰","정보 없음",-1,"확인 안 됨"],["방","좋음",2,"후기 호평, 다만 9건"],["가격","좋음",2,"약 25만원, 가장 쌀"]],why:"가장 싸고 방도 좋다는 평이지만, 시내까지 택시로 30~40분이라 4박 내내 하루 왕복 1시간 이상을 길에서 쓰게 돼요. 1번 기준에서 너무 멀어서 제외예요.",pn:"약 3.1만원",pt:"약 12.5만원",friend:true,revSrc:"보내 준 리뷰 없음, 구글 후기 참고",reviews:[{s:"구글",w:"4박 투숙객",t:"무인양품 느낌의 깔끔한 인테리어, 침대가 편하고 세탁기 무료"},{s:"구글",w:"투숙객",t:"조식이 여행 중 최고였다는 평, 직원 친절"}],
+     pros:["미니멀한 인테리어, 조식 호평","가장 저렴함"],
+     cons:["민항구 외곽, 시내까지 택시 30~40분"],
+     tip:"",
+     agoda:"https://www.agoda.com/sh-app/rQfT5yUdONz"},
+
+    {id:"bund",type:"sight",name:"와이탄",lat:31.2402611,lon:121.490577,dir:"b",dist:"490m",
+     desc:"황푸강 서쪽 강변 산책로. 조계 시절 유럽식 건물이 늘어서 있고, 강 건너 푸둥 스카이라인이 보이는 상하이 야경 1순위예요. 저녁 조명 시간에 가세요."},
+    {id:"pearl",type:"sight",name:"동방명주",lat:31.2396889,lon:121.4997553,dir:"r",dist:"950m",
+     desc:"구슬 두 개가 꿰인 모양의 방송탑. 올라가기보다 와이탄에서 바라보는 모습이 핵심이에요."},
+    {id:"tower",type:"sight",name:"상하이 타워",lat:31.233518,lon:121.505618,dir:"r",dist:"1.8km",
+     desc:"전망대를 하나만 간다면 여기. 동방명주가 사진에 같이 나와요. 해 질 녘이 인기라 미리 예매하세요."},
+    {id:"nanjing",type:"sight",name:"난징동루",lat:31.234721,lon:121.474898,dir:"b",dist:"1.5km",
+     desc:"인민광장에서 와이탄까지 약 1.2km 이어지는 보행자 쇼핑 거리. 네온이 켜지는 저녁에 걷다가 와이탄으로 넘어가는 게 정석이에요."},
+    {id:"yu",type:"sight",name:"예원",lat:31.2272355,lon:121.492094,dir:"r",dist:"1.8km",
+     desc:"명나라 때 만든 전통 정원과 주변 상점가. 샤오롱바오, 기념품 구경하기 좋고 밤 조명도 예뻐요. 정원은 월요일 휴무."},
+    {id:"xtd",type:"sight",name:"신천지",lat:31.2192992,lon:121.4748145,dir:"r",dist:"3.1km",
+     desc:"옛 골목 주택(석고문)을 고친 카페, 레스토랑 거리. 친구가 말한 유럽식 거리에 커피 많은 곳이 여기예요."},
+    {id:"tzf",type:"sight",name:"톈쯔팡",lat:31.208812,lon:121.468898,dir:"l",dist:"약 4.7km",
+     desc:"좁은 골목 미로 속 소품숍, 공예품, 간식집. 신천지에서 1km 거리라 하루에 묶기 좋아요. 오전이 한산해요."},
+    {id:"wukang",type:"sight",name:"우캉맨션",lat:31.20448,lon:121.438326,dir:"b",dist:"약 6.7km",
+     desc:"뱃머리 모양의 1920년대 붉은 벽돌 건물. 옛 프랑스 조계 가로수길 산책과 카페 투어를 겸하는 곳이에요."},
+    {id:"jingan",type:"sight",name:"징안사",lat:31.2235188,lon:121.445284,dir:"r",dist:"약 5.2km",
+     desc:"도심 한가운데 있는 황금빛 사원. 입장료 50위안, 07:30~17:00. 조명 점등은 금, 토 저녁에만 해서 이번 일정(월~금 오전)엔 못 봐요. 시간이 남을 때만."}
+  ];
+
+  var EXTRA={
+    bund:{cn:"外滩",q:"상하이 와이탄 야경",spots:[["강변 산책로","강 건너 푸둥 스카이라인을 정면으로 보는 메인 포토존"],["와이바이두교","1900년대 초 철제 다리, 숙소 바로 앞이라 야경 산책 시작점"],["피스 호텔(화평반점)","와이탄을 대표하는 옛 호텔, 재즈바로 유명"],["옛 세관 건물 시계탑","와이탄 건물들 사이에서 눈에 띄는 시계탑"],["황푸강 유람선","배 위에서 양쪽 야경을 한 번에"],["북와이탄 공원","숙소 바로 앞, 낮에 보는 동방명주는 여기가 예쁘다는 추천"]]},
+    pearl:{cn:"东方明珠",q:"상하이 동방명주",spots:[["유리 바닥 전망층","발밑이 내려다보이는 투명 바닥"],["루자쭈이 원형 육교","빌딩 숲 한가운데 동그란 보행 육교, 사진 명소"],["푸둥 강변길","반대로 와이탄 쪽 야경을 보는 산책로"]]},
+    tower:{cn:"上海中心大厦",q:"상하이 타워 전망대",spots:[["118층 전망대","상하이 전체가 내려다보이는 메인 전망층"],["초고속 엘리베이터","순식간에 꼭대기까지 올라가는 경험"],["세 빌딩 한 컷 포토존","상하이 타워, 월드 파이낸셜 센터(병따개 빌딩), 진마오 타워를 한 화면에"]]},
+    nanjing:{cn:"南京东路步行街",q:"상하이 난징동루 야경",spots:[["네온 간판 거리","저녁에 켜지는 대형 네온이 핵심"],["제일식품상점","상하이 과자, 간식 사기 좋은 오래된 식품점"],["인민광장","거리 서쪽 끝, 상하이 박물관이 근처"],["와이탄 연결","동쪽 끝으로 나오면 바로 와이탄"]]},
+    yu:{cn:"豫园",q:"상하이 예원",spots:[["구곡교","연못 위 지그재그 다리"],["호심정 찻집","연못 한가운데 있는 오래된 찻집"],["옥영롱","구멍이 숭숭 뚫린 유명한 기암"],["남상만두점","샤오롱바오로 유명한 노포, 줄이 길어요"],["성황묘","예원 상점가 안의 도교 사원"],["치파오 체험 (죽간묵)","인스타 추천, 6만원대"]]},
+    xtd:{cn:"新天地",q:"상하이 신천지",spots:[["석고문 골목","붉은 벽돌과 돌 문틀의 옛 상하이 주택가"],["석고문 옛집 전시관","옛 석고문 주택 내부를 재현한 작은 박물관"],["중국공산당 제1차 대회 기념관","1921년 첫 당대회가 열린 건물"],["타이핑 호수 공원","산책하기 좋은 바로 옆 호수 공원"]]},
+    tzf:{cn:"田子坊",q:"상하이 텐즔팡",spots:[["타이캉루 골목 입구","미로 같은 골목의 시작점"],["소품숍, 공방","수공예품, 차, 치파오, 기념품"],["화이트래빗 사탕 가게","상하이 대표 우유 사탕 기념품"],["간식, 카페","걸으면서 먹기 좋은 간식과 작은 카페"]]},
+    wukang:{cn:"武康大楼",q:"상하이 우캉맨션",spots:[["교차로 포토존","뱃머리 모양이 가장 잘 보이는 맞은편 길"],["우캉루 가로수길","플라타너스와 옛 저택이 이어지는 산책길"],["안푸루","카페와 편집숍이 모인 근처 거리"],["바진 고택","중국 작가 바진이 살던 집, 우캉루에 있어요"]]},
+    jingan:{cn:"静安寺",q:"상하이 징안사",spots:[["황금 지붕 대웅보전","빌딩 사이로 보이는 금빛 지붕이 상징"],["은불상","거대한 은 불상"],["난징시루","주변 고급 백화점, 쇼핑가"]]}
+  };
+  places.forEach(function(p){var e=EXTRA[p.id];if(e){p.cn=e.cn;p.q=e.q;p.spots=e.spots;}});
+  places.push(
+    {id:"vessel",type:"spot",name:"THE VESSEL 테라스 카페&바",short:"더 베슬",cn:"THE VESSEL 外滩沙美店 (北京东路194号 沙美大楼7楼)",lat:31.2421,lon:121.4888,dir:"r",dist:"약 450m",q:"THE VESSEL 外滩沙美 上海",
+     desc:"오래된 유럽식 건물 7층의 아치형 창가에서 동방명주와 붉은 벽돌 건물이 한 프레임에 담기는 곳. 낮엔 카페, 밤엔 바로 바뀌어요.",
+     tip:"카페 09:30~18:00, 바 18:30~새벽 1:30. 창가 자리는 오픈 직후가 유리해요. 지도의 점은 건물 기준 대략적인 위치예요.",
+     spots:[["아치형 창가 자리","사진 속 그 자리, 동방명주가 정면으로 보여요"],["밤의 바","와이탄 야경을 보며 한잔"]]},
+    {id:"xmas",type:"spot",name:"와이탄위안 독일 크리스마스 마켓",short:"크리스마스 마켓",cn:"外滩源德国圣诞市集 (北京东路99号 圆明园路步行街)",lat:31.2433,lon:121.4878,dir:"l",dist:"약 400m",q:"外滩源 德国圣诞市集",
+     desc:"100년 된 붉은 벽돌 거리(와이탄위안) 위안밍위안루 보행자 거리에서 열리는 독일식 크리스마스 마켓. 2026년은 11월 25일~12월 27일, 월요일과 화요일은 문을 닫아요. 우리는 12월 16일(수) 저녁에 가요.",
+     tip:"수~금 15:00~22:00, 토~일 12:00~22:00. 티켓 예매 30위안, 현장 40위안. 예약은 위챗 검색창에서 ‘GermanEvents德华社’ 미니프로그램을 찾아 날짜를 12/16으로 고르면 돼요. 주소는 北京东路99号 圆明园路步行街, 베이징동루와 난쓰저우루 사이의 위안밍위안루예요. 지하철은 난징동루역에서 걸어서 약 15분이지만, 우리 숙소에서는 와이바이두교를 건너 걸어서 가까워요. 츄러스를 꼭 먹으라는 댓글이 있어요.",
+     spots:[["위안밍위안루 보행자 거리","연말에 나무 오두막 노점이 줄지어 서는 메인 거리"],["교회 앞 광장 크리스마스 트리","마켓에서 사진이 가장 잘 나오는 곳이라는 후기"],["독일식 소시지, 뱅쇼오, 츄러스","인기 노점은 줄이 길어요"]]},
+    {id:"wolf",type:"spot",name:"울프강 스테이크하우스",short:"울프강",cn:"Wolfgang's Steakhouse (东大名路588号 白玉兰广场)",lat:31.24832,lon:121.49758,dir:"r",dist:"약 700m",q:"Wolfgang's Steakhouse 上海 白玉兰广场",
+     desc:"북와이탄 화이트 매그놀리아 플라자 1층의 스테이크하우스. 숙소에서 걸어갈 수 있어서 첫날 저녁으로 좋아요.",
+     tip:"구글 후기 기준 가격이 꽤 높은 편이에요. 메뉴에 돼지고기 립아이도 있으니 주문할 때 소고기인지 확인하세요.",
+     spots:[]},
+    {id:"cafes",type:"spot",name:"융캉루~타이위안루 카페 거리",short:"카페 거리",cn:"陕西南路站 7号口 (永康路, 太原路)",lat:31.2085,lon:121.4565,dir:"b",dist:"약 5.2km",q:"上海 永康路 咖啡",
+     desc:"옛 프랑스 조계 골목에 작은 스페셜티 카페가 모여 있어서 걸어서 카페 투어하기 좋아요. 우캉맨션과 톈쯔팡 사이에 있어서 같은 날 묶기 딱이에요.",
+     tip:"지하철 산시난루역 7번 출구. 대부분 작은 가게라 영업시간은 가오더 지도에서 확인하세요.",
+     spots:[["Honky Tonk Coffee","융캉루 쪽, 오렌지를 쓴 시그니처 메뉴 사진이 유명"],["CUBIC 3 三立方咖啡 (永康路店)","융캉루 지점"],["O.P.S. CAFE (太原路店)","커피 칵테일 같은 코스형 음료만 파는 곳, 서서 마시는 구조, 평일 웨이팅 10분 안팎"],["Captain George 风味博物馆","빈티지 인테리어, 10시 오픈 전부터 줄 서요. 구글 지도 위치가 틀려서 가오더 기준 타이위안루 236호"],["3½ 三又二分之一","인스타 지도에서 가장 남쪽, 지하철역 쪽"]]},
+    {id:"kgov",type:"spot",name:"대한민국 임시정부 청사",short:"임시정부",cn:"大韩民国临时政府旧址",lat:31.2172479,lon:121.4746982,dir:"b",dist:"약 3.4km",q:"상하이 대한민국 임시정부 청사",
+     desc:"1920~30년대 대한민국 임시정부가 쓰던 청사. 신천지 바로 옆 골목이라 신천지와 묶어서 가기 좋아요.",
+     tip:"입장료 20위안, 내부 사진 촬영은 안 돼요. 정해진 관람 시간에만 열려서 오후 일찍 가는 걸 추천해요.",
+     spots:[]},
+    {id:"jianbing",type:"spot",name:"산둥 잡곡 지엔빙",short:"지엔빙",cn:"山东杂粮煎饼 (东体育会路396号)",lat:31.278018,lon:121.485128,nopin:true,dist:"숙소에서 북쪽으로 약 3.7km (훙커우구)",q:"上海 杂粮煎饼",
+     desc:"얇게 부친 잡곡 반죽에 소스, 야채, 햄, 바삭한 튀김을 넣어 접어 주는 중국식 길거리 아침. 곽범, 박명수가 먹고 극찬해 유명해진 가게예요.",
+     tip:"06:00~18:00, 한국어 메뉴판이 있고 풀토핑 추천. 갓 구워 줘서 아주 뜨겁고 크기가 커서 나눠 먹기 좋아요. 이 가게는 훙커우구에 있지만 난징동루 주변에도 지엔빙 파는 곳이 많아요. 굳이 찾아갈 맛은 아니라는 댓글도 있어요.",
+     spots:[]},
+    {id:"libaixie",type:"spot",cat:"food",name:"이백게 게살국수",short:"이백게",cn:"李百蟹·蟹黄面·临江餐厅 外滩豫园店 (外滩22号3楼)",lat:31.2410,lon:121.4903,dir:"l",dist:"약 450m",q:"李百蟹 蟹黄面 上海",
+     desc:"게살과 게알(蟹黄)을 듬뿍 올린 게살국수집. 와이탄 22호 건물 3층이라 강가 창가 자리가 인기예요. 상하이, 난징, 쑤저우, 항저우에만 있는 가게예요.",
+     tip:"광고 게시물이에요. 싸진 않아서 클룩이나 메이투안 단체구매 쿠폰을 쓰면 더 싸다는 후기가 있어요. 지도의 점은 건물 기준 대략적인 위치예요.",
+     spots:[["게살국수(蟹黄面)","대표 메뉴"],["게살 샤오롱바오, 취한 새우","후기에서 같이 추천한 메뉴"]]},
+    {id:"zhuang",type:"spot",cat:"food",name:"장씨룽싱 털게 국수·밥",short:"장씨룽싱",cn:"庄氏隆兴 (四川中路156号)",lat:31.235067,lon:121.489095,dir:"r",dist:"약 1.1km",q:"庄氏隆兴 蟹黄面",
+     desc:"털게 살과 게알을 올린 국수와 밥, 털게 딤섬으로 유명한 가게. 릴스에선 털게밥과 트러플 털게 딤섬을 추천했어요.",
+     tip:"쓰촨중루점은 10:00~21:30, 와이탄에서 걸어갈 수 있어요. 난징동루 쪽 저장중루 441호에도 지점이 있어요. 게알 국수 세트가 168위안 안팎이라 비싼 편이고 점심엔 줄이 길어요. 식탁 QR을 알리페이로 찍어 주문해요. 릴스 속 ‘蟹点(상하이 첫 매장)’은 같은 브랜드의 다른 매장일 수 있어서, 가오더에서 ‘庄氏隆兴蟹点’으로도 검색해 보세요.",
+     spots:[["털게밥, 게알 국수","대표 메뉴, 식초를 골들여 먹어요"],["트러플 털게 딤섬","릴스 추천"],["돈가스(炸猪排)","바삭해서 같이 시키기 좋다는 후기가 많아요"]]},
+    {id:"fanlou",type:"spot",cat:"food",name:"판러우 (광둥식 국수·딤섬)",short:"판러우",cn:"蘩楼 (肇嘉浜路1000号 汇金百货6楼)",lat:31.1948,lon:121.4386,dir:"r",dist:"약 7.5km (쉬자후이, 우캉맨션에서 약 1km)",q:"蘩楼 上海",
+     desc:"광둥식 국수, 창펀, 딤섬을 파는 가게로 상하이에 4개 지점이 있어요. 국수를 추천하는 댓글과, 창펀이 점도덕보다 맛있었다는 댓글이 있어요.",
+     tip:"쉬자후이 지점(쉬자후이역 14번 출구 근처)은 붐비지만 옆 쇼핑몰 구경하기 좋고, 수요일 우캉맨션 일정에서 점심으로 가기 좋아요. 난징시루 1168호 중신타이푸광장 5층 지점(南京西路1168号 中信泰富广场5楼516)은 대기가 거의 없대요. 지도의 점은 대략적인 위치예요.",
+     spots:[]},
+    {id:"henjiu",type:"spot",cat:"food",name:"헌지우이치엔 양꼬치",short:"양꼬치",cn:"很久以前羊肉串 (云南南路180号)",lat:31.226747,lon:121.481245,dir:"r",dist:"약 2.2km",q:"很久以前羊肉串 上海",
+     desc:"자동으로 돌아가는 꼬치 그릴에 직원이 구워 주는 양꼬치 체인. 비린내가 없어 양꼬치 초보도 먹기 좋다는 추천이에요.",
+     tip:"대기가 아주 길어요. 피크 시간엔 1~2시간, 5시간 넘게 기다렸다는 후기도 있어요. 저녁 영업을 시작하는 17시 전에 도착하면 대기가 짧다는 후기가 많아요. 기다리는 동안 팝콘, 차, 아이스크림을 주고, 직원이 고기를 다 구워 줘요. 1L 맥주가 60위안이에요. 퇄즈팡 근처 다푸루점도 있어요.",
+     spots:[["양꼬치(羊肉串)","대표 메뉴"],["닭날개, 닭연골, 대만 소시지","후기 추천 메뉴"]]},
+    {id:"laojishi",type:"spot",cat:"food",name:"라오지스 (상하이 요리)",short:"라오지스",cn:"老吉士酒家 (IAPM 3楼)",lat:31.2158508,lon:121.4582051,dir:"l",dist:"약 4.5km",q:"老吉士 上海菜",
+     desc:"홍소육, 파기름면, 볶음밥 같은 상하이 가정식으로 유명한 식당. 느끼할 땐 오이무침을 같이 시키래요.",
+     tip:"화이하이루 IAPM 쇼핑몰 3층 지점이 카페 거리, 우캉맨션과 가까워서 수요일 점심 대안으로 좋아요. 우캉루 쪽에도 작은 가게가 있다는 후기가 있어요.",
+     spots:[["홍소육(红烧肉)","대표 메뉴"],["파기름면(葱油拌面)","후기에서도 추천"],["오이무침(拍黄瓜)","같이 시키기"]]},
+    {id:"zhuguangyu",type:"spot",cat:"food",name:"주광옥 훠궈",cn:"朱光玉火锅馆",q:"朱光玉火锅馆 上海",
+     desc:"토마토탕이 맛있다고 추천받은 훠궈 체인. 고기와 야채를 많이 시켜도 비싸지 않았대요.",
+     tip:"지점이 여러 곳이라 가오더 지도에서 가까운 곳을 검색하세요. 저녁엔 대기가 생길 수 있어요.",spots:[]},
+    {id:"marzo",type:"spot",cat:"cafe",name:"13DE MARZO 곰돌이 컵 카페",cn:"13DE MARZO",q:"13DE MARZO 上海 小熊",
+     desc:"음료를 시키면 컵에 작은 곰돌이를 붙여 주는 카페. 상하이에 지점이 여러 곳이고 신천지에도 있어요.",
+     tip:"테이크아웃만 되는 곳이 많아요. 음료 맛은 평범하다는 후기도 있어서 곰돌이 보러 가는 곳이에요.",spots:[]},
+    {id:"chengo",type:"spot",cat:"see",name:"CHENGO 아이돌 체험",cn:"CHENGO",q:"上海 CHENGO 爱豆 写真",
+     desc:"헤어, 메이크업을 받고 의상 3벌 중 골라 아이돌처럼 사진을 찍는 체험. 약 7만원이고, 셀카로 포토카드도 만들어 준대요.",
+     tip:"위치와 예약 방법은 게시물에 없어서 가오더나 샤오홍슈에서 ‘CHENGO’로 확인이 필요해요. 체험 뒤 메이크업한 채로 예원 야경을 보러 가면 좋다는 추천이에요.",spots:[]},
+    {id:"mochi",type:"spot",cat:"snack",name:"대왕 과일모찌",cn:"水果大福",q:"上海 豫园 水果大福",
+     desc:"과일을 통째로 넣은 커다란 찹쌀떡. 크림치즈 같은 꾸덕한 크림을 골라 커스텀할 수 있고, 둘이 하나 나눠 먹기 좋은 크기래요.",
+     tip:"게시물 작성자는 예원 구경 후 미니소 근처를 걷다 우연히 찾았대요. 가게 이름은 게시물에 없어서, 예원 근처에서 ‘水果大福’를 찾아보세요.",spots:[]},
+    {id:"jiajia",type:"spot",cat:"food",name:"지아지아탕바오",short:"지아지아탕바오",cn:"佳家汤包 (黄河路90号)",lat:31.234577,lon:121.470821,dir:"l",dist:"약 2.3km",q:"佳家汤包 黄河路",
+     desc:"탕바오(샤오롱바오)와 파기름면으로 유명한 로컬 식당. 미슐랭 가이드에 오른 곳인데도 저렴해요. 드라마 ‘번화’로 유명해진 황허루 먹자골목에 있어요.",
+     tip:"09:00~21:30. 가게가 좁아 합석하거나 자리가 불편할 수 있어요. 게알 국수는 기대보다 별로였다는 후기가 있어서 탕바오와 파기름면 위주로 시키는 걸 추천해요.",
+     spots:[["탕바오(汤包)","돼지고기, 게살 등"],["파기름면(葱油拌面)","단골들이 꼭 시키는 메뉴"]]},
+    {id:"yangs",type:"spot",cat:"food",name:"샤오양셩젠 (생젠바오)",short:"샤오양셸젠",cn:"小杨生煎 (宁波路178号)",lat:31.2392629,lon:121.4836005,dir:"b",dist:"약 1km",q:"小杨生煎",
+     desc:"바닥은 바삭하고 안에 육즙이 가득한 군만두 생젠바오 체인. 4개에 13위안 안팎으로 싸요.",
+     tip:"닝보루점은 06:30~21:00이고 난징동루역과 가까워요. 주문과 결제는 알리페이나 위챗 QR로 해요. 뜨거울 때 바로 먹어야 맛있어요.",
+     spots:[["돼지고기 생젠(鲜肉生煎)","가장 인기"],["새우 생젠","후기 추천"]]},
+    {id:"xjstall",type:"spot",cat:"food",name:"신장 전통 양꼬치 노점",short:"양꼬치 노점",cn:"新疆传统烤羊肉串 (宁海东路·云南南路 모퉁이)",lat:31.228307,lon:121.480422,dir:"b",dist:"약 2.1km",q:"上海 云南南路 新疆 烤羊肉串",
+     desc:"윈난난루 먹자거리 모퉁이에서 새벽부터 밤늦게까지 굽는 양꼬치 노점. 한 꼬치 5~6위안이고 냄새가 안 난다는 후기가 많아요.",
+     tip:"앉을 자리는 없고 서서 먹어요. 현지인 줄이 계속 있지만 금방 빠져요. 헌지우이치엔과 걸어서 5분 거리라, 그쪽 대기가 너무 길면 여기서 먹어도 좋아요.",spots:[]},
+    {id:"haidilao",type:"spot",cat:"food",name:"하이디라오 훠궈 (제일백화점점)",short:"하이디라오",cn:"海底捞 (南京东路830号 第一百货5楼)",lat:31.2355779,lon:121.4747182,dir:"t",dist:"약 1.9km",q:"海底捞 南京东路 第一百货",
+     desc:"서비스로 유명한 중국 대표 훠궈 체인. 토마토탕이 인기고, 소스바에서 직접 소스를 만들어 먹어요.",
+     tip:"난징동루 서쪽 끝 제일백화점 5층, 11:00~22:30. 대기가 짧았다는 후기가 있어요. 와이탄 쪽 끝(南京东路123号)에도 지점이 있는데, 거기는 줄이 길지만 새벽까지 해요.",
+     spots:[["토마토탕(番茄锅)","가장 많이 추천하는 국물"],["수타면(扯面)","직원이 춤추듯 면을 늘려 줘요"],["소스바","땅콩 소스 조합 추천"]]},
+    {id:"laowang",type:"spot",cat:"food",name:"라오왕 훠궈",short:"라오왕",cn:"捞王锅物料理 (武定路1052号)",lat:31.229951,lon:121.442106,dir:"r",dist:"약 5km",q:"捞王 胡椒猪肚鸡",
+     desc:"줄 서서 먹는 걸로 유명한 훠궈 체인. 맵지 않은 후추 돼지위 닭탕(胡椒猪肚鸡)과 버섯탕이 대표예요.",
+     tip:"징안구 우딩루점 10:00~22:00. 매운 걸 잘 못 먹으면 하이디라오보다 여기가 나아요. 즉석에서 버섯을 깎아 주는 메뉴가 재밌다는 후기가 있어요. 지점이 여러 곳이라 가오더에서 동선 근처를 찾아보세요.",
+     spots:[["후추 돼지위 닭탕(胡椒猪肚鸡)","대표 국물"],["새우완자","후기 추천"]]},
+    {id:"gelato",type:"spot",name:"야인선생 젤라또",cn:"野人先生 YEAH GELATO",q:"野人先生 gelato",
+     desc:"쌀로 만든 젤라또를 뿔처럼 높게 쌓아 주는 중국 젤라또 체인. 피스타치오를 꼭 먹으라는 댓글이 많아요.",
+     tip:"밤 9시 이후 1+1 행사(게시물 기준). 지점이 많으니 가오더 지도에서 ‘野人先生’을 검색해 동선 근처 지점을 고르세요. 화요일 난징동루 저녁에 넣어 뒀어요.",
+     spots:[]},
+    {id:"kinglomo",type:"spot",name:"킹로모 진리먼 (창고형 간식 가게)",cn:"金粒门 kinglomo",q:"金粒门 kinglomo",
+     desc:"요즘 중국에서 오픈런, 웨이팅이 생기는 창고형 간식 가게. 매장에서 만드는 음료도 팔아요.",
+     tip:"추천: 오리지널 감자칩(基本薯片), 타로칩(原切香芋片), 초코 웨하스(醇萃可可威化饼干), 자스민 밀크티(鲜奶原叶茉莉). 상하이 지점은 가오더 지도에서 ‘金粒门’ 검색.",
+     spots:[]}
+  );
+  var V2={
+    base:{verdict:"pick",verdictText:"새 기준 1순위",sc:[["이동","보통",1,"역 2곳 도보 5분, 신천지·예원 3km 안팎, 와이탄은 택시"],["가격","좋음",2,"약 30만원, 25만원 절약"],["방","좋음",2,"46㎡, 8.8점"],["뷰","보통",1,"창문 있음, 일부 방 강·도시 전망"]],
+      brief:"지하철역 2곳이 가까워 이동은 무난하고, 가격(25만원 절약)과 방(46㎡, 8.8점)이 후보 중 가장 좋아요. 와이탄 야경 뒤엔 택시로 10~15분 돌아와야 하는 게 대가예요."},
+    ji:{verdict:"maybe",verdictText:"방 감수하면 대안",sc:[["이동","좋음",2,"난징둥루역·톈통루역 도보 5분, 와이탄 460m"],["가격","보통",1,"약 45만원, 10만원 절약"],["방","아쉬움",0,"15~20㎡, 냉장고 없음, 데이터 문제 후기"],["뷰","아쉬움",0,"기본 방 창문 없음"]],
+      brief:"이동 편의성은 후보 중 1등이고 10만원도 아껴요. 하지만 방이 좁고 창문, 냉장고가 없고 방 안에서 데이터가 안 됐다는 후기가 있어서 3번 기준에서 크게 깎여요."},
+    mine:{stayDesc:"지금 예약해 둔 숙소예요. 상하이 번드 사우스 차이나 하버 뷰 호텔(북와이탄, 黄浦路53号). 체크인은 12시부터, 체크아웃은 12시까지예요.",cn:"黄浦路53号",verdict:"maybe",verdictText:"대안 (예약 완료)",sc:[["이동","보통",1,"와이탄·난징동루 도보, 지하철역 12~14분"],["가격","아쉬움",0,"55만원, 가장 비쌈"],["방","보통",1,"7.7점, 2014년 리모델링"],["뷰","좋음",2,"시티뷰"]],
+      brief:"와이탄을 걸어서 다니고 방에서 시티뷰가 보이지만, 지하철역이 멀고 가격이 가장 비싸요. 새 기준에선 4번(뷰)만 확실히 앞서요. 바꾼다면 지금 예약의 취소 규정부터 확인하세요."},
+    atwell:{verdict:"no",verdictText:"제외",sc:[["이동","아쉬움",0,"와이탄·예원 7.1km, 디즈니 26km"],["가격","아쉬움",0,"약 52만원"],["방","좋음",2,"2025년 신축, 9.5점"],["뷰","좋음",2,"21~28층 시티뷰"]],
+      brief:"방과 뷰는 최고지만 1, 2번 기준(이동, 가격)이 모두 아쉬워요. 기존 예약과 가격은 비슷한데 관광지에서 멀어요."},
+    atour:{sc:[["이동","아쉬움",0,"와이탄 약 10km"],["가격","좋음",2,"약 28만원"],["방","아쉬움",0,"곰팡이 냄새 후기"],["뷰","정보 없음",-1,"확인 안 됨"]],
+      brief:"가격은 싸지만 이동이 불편하고, 비슷한 가격의 베이스플러스가 모든 면에서 나아요."},
+    yard:{sc:[["이동","아쉬움",0,"와이탄 약 14km, 외곽"],["가격","좋음",2,"약 25만원, 가장 쌈"],["방","좋음",2,"후기 호평, 9건뿐"],["뷰","정보 없음",-1,"확인 안 됨"]],
+      brief:"가장 싸지만 시내까지 택시로 30~40분이라 1번 기준에서 탈락이에요."}
+  };
+  var KR={mine:{g:[1,2],b:[5,4]},ji:{g:[1,2],b:[4,0]},base:{g:[0,1],b:[4,3]},atwell:{g:[0,2],b:[1,5]},atour:{g:[1],b:[0]},yard:{g:[0,1],b:[]}};
+  places.forEach(function(p){if(V2[p.id])Object.assign(p,V2[p.id]);if(KR[p.id])p.kr=KR[p.id];});
+  places.forEach(function(p){if(p.id==="ji"&&p.reviews&&p.reviews[0])p.reviews[0].t="방이 작고 소음에 약함, 영어가 안 통해 번역기 사용 (깨끗하고 냄새는 합격)";});
+  function chipsHTML(p){if(!p.sc)return '';var col=['var(--bad)','var(--warn)','var(--pick)'];
+    return '<div class="sc">'+p.sc.map(function(x){var c=x[2]<0?'var(--muted)':col[x[2]];return '<span class="scc" style="--c:'+c+'"><b>'+esc(x[0])+'</b> '+esc(x[1])+' <small>('+esc(x[3])+')</small></span>';}).join('')+'</div>';}
+  function revBlock(p){var r=p.reviews||[],k=p.kr||{g:[],b:[]},used={};
+    function one(v){var n=parseFloat(v.s);var low=!isNaN(n)&&n<7;return '<p class="rv"><b'+(low?' style="color:var(--warn)"':'')+'>'+esc(v.s)+'</b> '+esc(v.t)+'<br><span class="who">'+esc(v.w)+'</span></p>';}
+    var h='<p class="revsrc">'+esc(p.revSrc||'')+'</p>';
+    if(k.g.length)h+='<p class="rvh">좋은 후기</p>'+k.g.map(function(i){used[i]=1;return one(r[i]);}).join('');
+    if(k.b.length)h+='<p class="rvh bad">아쉬운 후기</p>'+k.b.map(function(i){used[i]=1;return one(r[i]);}).join('');
+    var rest=r.filter(function(v,i){return !used[i];});
+    if(rest.length)h+='<details class="morer"><summary>나머지 후기 '+rest.length+'개 보기</summary>'+rest.map(one).join('')+'</details>';
+    return h;}
+  function amap(p){return "https://maps.apple.com/?ll="+p.lat+","+p.lon+"&q="+encodeURIComponent(p.cn||p.full||p.name);}
+  function spotsHTML(p){if(!p.spots)return "";return '<ul class="spots">'+p.spots.map(function(s){return '<li><b>'+esc(s[0])+'</b>'+esc(s[1])+'</li>';}).join("")+'</ul>';}
+  places.push({id:"disney",type:"sight",name:"상하이 디즈니랜드",short:"디즈니랜드",cn:"上海迪士尼乐园",q:"상하이 디즈니랜드 겨울",lat:31.1434,lon:121.657,dir:"t",showAll:true,
+    dist:"약 19km (택시 40~50분, 지하철 11호선 1시간 이상)",
+    desc:"2026년 개장 10주년. 12월 1일부터 겨울 시즌 행사(Winter Frostival)가 열려서 미키와 친구들이 겨울 스키 복장으로 나와요.",
+    tip:"날짜 지정 티켓이라 미리 예매하세요. 자세한 팁과 반입 금지 물품은 아래 디즈니랜드 섹션에 모아 뒀어요.",
+    spots:[["주토피아 구역","주토피아: 핫 퍼슈트 라이드, 대기 줄 자체가 볼거리"],["트론 라이트사이클","상하이 디즈니 대표 스릴 라이드"],["캐리비안의 해적","상하이에만 있는 버전"],["성 앞 야간 쇼","폐장 전 성 앞에서 열리는 야간 쇼"],["겨울 시즌 행사","겨울 옷 입은 미키와 친구들, 크리스마스 장식"]]});
+  function linksHTML(p){var q=encodeURIComponent(p.q||p.name);
+    if(p.lat==null)return '<div class="links"><a target="_blank" rel="noopener" href="'+esc("https://www.google.com/search?tbm=isch&q="+q)+'">사진 보기 (구글)</a><a target="_blank" rel="noopener" href="'+esc("https://search.naver.com/search.naver?where=image&query="+q)+'">사진 보기 (네이버)</a></div>';
+    return '<div class="links"><a target="_blank" rel="noopener" href="'+esc("https://www.google.com/search?tbm=isch&q="+q)+'">사진 보기 (구글)</a><a target="_blank" rel="noopener" href="'+esc("https://search.naver.com/search.naver?where=image&query="+q)+'">사진 보기 (네이버)</a><a target="_blank" rel="noopener" href="'+esc(amap(p))+'">애플 지도</a><a target="_blank" rel="noopener" href="'+esc(gmap(p.lat,p.lon))+'">구글 지도</a></div>';}
+
+  var VIEWS={all:[0.2,0.2,14.9,13.5],core:[6.0,0.4,8.2,7.1],bund:[10.3,0.9,2.8,3.1],wide:[0.2,0.2,28.6,14.0]};
+  var view="core", onlyHotels=false, selected="mine";
+  var svg=document.getElementById("map");
+  var NS="http://www.w3.org/2000/svg";
+  var vb=VIEWS.core.slice();
+
+  // river
+  var riv=[[31.140,121.446],[31.155,121.456],[31.170,121.466],[31.182,121.476],[31.193,121.487],[31.203,121.4945],[31.214,121.4995],[31.226,121.4985],[31.236,121.4945],[31.2425,121.4945],[31.249,121.4995],[31.2535,121.508],[31.256,121.520],[31.258,121.535]];
+  var d=riv.map(function(p,i){var q=xy(p[0],p[1]);return (i?"L":"M")+q[0].toFixed(3)+" "+q[1].toFixed(3);}).join(" ");
+  var river=document.getElementById("river");
+  river.setAttribute("d",d);river.setAttribute("stroke-width","0.32");
+
+  // rings
+  var b=xy(BUND[0],BUND[1]);
+  var rings=document.getElementById("rings");
+  [5,10].forEach(function(r){
+    var c=document.createElementNS(NS,"circle");
+    c.setAttribute("cx",b[0]);c.setAttribute("cy",b[1]);c.setAttribute("r",r);
+    c.setAttribute("fill","none");c.setAttribute("stroke","var(--ring)");c.setAttribute("stroke-dasharray","4 5");
+    c.setAttribute("vector-effect","non-scaling-stroke");c.setAttribute("stroke-width","1");
+    rings.appendChild(c);
+  });
+
+  var scaled=[]; // groups needing pixel-constant scale
+  function addScaledText(group,x,y,text,cls,anchor,mode){
+    var g=document.createElementNS(NS,"g");g.dataset.x=x;g.dataset.y=y;g.dataset.mode=mode||"both";
+    var t=document.createElementNS(NS,"text");t.setAttribute("class",cls);t.setAttribute("text-anchor",anchor||"middle");
+    t.textContent=text;g.appendChild(t);group.appendChild(g);scaled.push(g);return g;
+  }
+  var areas=document.getElementById("areas");
+  var a1=xy(31.226,121.522);addScaledText(areas,a1[0],a1[1],"푸둥","area","middle","both");
+  var a2=xy(31.214,121.447);addScaledText(areas,a2[0],a2[1],"옛 프랑스 조계","area","middle","core");
+  var a3=xy(31.177,121.468);addScaledText(areas,a3[0],a3[1],"황푸강","area","middle","both");
+  addScaledText(areas,b[0]+5,b[1]-0.15,"5km","area","start","all");
+  addScaledText(areas,b[0]+10,b[1]-0.15,"10km","area","start","all");
+  addScaledText(areas,14.8,12.6,"디즈니랜드는 동쪽으로 약 19km →","area","end","all");
+  var cl=addScaledText(areas,b[0]-0.2,b[1]-0.75,"와이탄 일대","area","end","all");
+
+  // pins
+  var pinsG=document.getElementById("pins");
+  var pinEls={};
+  places.forEach(function(p){
+    if(p.lat==null||p.nopin)return;
+    var q=xy(p.lat,p.lon);
+    var g=document.createElementNS(NS,"g");
+    g.setAttribute("class","pin "+p.type);g.dataset.x=q[0];g.dataset.y=q[1];g.dataset.id=p.id;
+    g.setAttribute("tabindex","0");g.setAttribute("role","button");g.setAttribute("aria-label",(p.full||p.name));
+    var m;
+    if(p.type==="hotel"){
+      m=document.createElementNS(NS,"circle");m.setAttribute("r",p.id==="mine"?8.5:6.5);
+      m.setAttribute("fill","var(--hotel)");m.setAttribute("stroke","var(--halo)");m.setAttribute("stroke-width","2");
+    }else if(p.type==="spot"){
+      m=document.createElementNS(NS,"path");m.setAttribute("d","M0,-7 L6.5,5 L-6.5,5 Z");
+      m.setAttribute("fill","var(--spot)");m.setAttribute("stroke","var(--halo)");m.setAttribute("stroke-width","1.5");
+    }else{
+      m=document.createElementNS(NS,"rect");m.setAttribute("x",-4.5);m.setAttribute("y",-4.5);m.setAttribute("width",9);m.setAttribute("height",9);
+      m.setAttribute("transform","rotate(45)");m.setAttribute("fill","var(--sight)");m.setAttribute("stroke","var(--halo)");m.setAttribute("stroke-width","1.5");
+    }
+    m.setAttribute("class","mark");
+    var hit=document.createElementNS(NS,"circle");hit.setAttribute("r",14);hit.setAttribute("fill","transparent");
+    var t=document.createElementNS(NS,"text");t.setAttribute("class","lbl");
+    t.textContent=p.short||p.name;
+    var off={r:[11,4,"start"],l:[-11,4,"end"],t:[0,-12,"middle"],b:[0,19,"middle"]}[p.dir||"r"];
+    t.setAttribute("x",off[0]);t.setAttribute("y",off[1]);t.setAttribute("text-anchor",off[2]);
+    g.appendChild(hit);g.appendChild(m);g.appendChild(t);
+    g.addEventListener("click",function(){select(p.id,false);});
+    g.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();select(p.id,false);}});
+    pinsG.appendChild(g);pinEls[p.id]={g:g,label:t,p:p};scaled.push(g);
+  });
+  // draw hotels on top
+  ["mine","ji"].forEach(function(id){pinsG.appendChild(pinEls[id].g);});
+
+  function applyVB(){
+    svg.setAttribute("viewBox",vb.join(" "));
+    var r=svg.getBoundingClientRect();
+    if(!r.width)return;
+    var k=Math.max(vb[2]/r.width,vb[3]/r.height);
+    scaled.forEach(function(g){
+      g.setAttribute("transform","translate("+g.dataset.x+" "+g.dataset.y+") scale("+k+")");
+    });
+  }
+  function refreshVisibility(){
+    Object.keys(pinEls).forEach(function(id){
+      var o=pinEls[id];
+      o.g.classList.toggle("dim",onlyHotels&&o.p.type!=="hotel");
+      var show = (view==="core" || view==="bund" || o.p.showAll===true) && (o.p.type!=="spot" || view==="bund" || id===selected);
+      o.label.style.display=show?"":"none";
+    });
+    scaled.forEach(function(g){
+      if(!g.dataset.mode||g.classList.contains("pin"))return;
+      var m=g.dataset.mode;g.style.display=(m==="both"||m===view||(view==="wide"&&m==="all"&&g.textContent.indexOf("디즈니")<0))?"":"none";
+    });
+  }
+  var reduce=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var anim=null;
+  function goView(v){
+    view=v;
+    document.querySelectorAll("[data-view]").forEach(function(bt){bt.setAttribute("aria-pressed",bt.dataset.view===v?"true":"false");});
+    if(typeof setCap==="function")setCap();
+    refreshVisibility();
+    var from=vb.slice(),to=VIEWS[v];
+    if(reduce){vb=to.slice();applyVB();return;}
+    var t0=null;if(anim)cancelAnimationFrame(anim);
+    function step(ts){
+      if(!t0)t0=ts;var u=Math.min(1,(ts-t0)/480);var e=u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;
+      vb=from.map(function(f,i){return f+(to[i]-f)*e;});applyVB();
+      if(u<1)anim=requestAnimationFrame(step);
+    }
+    anim=requestAnimationFrame(step);
+  }
+
+  var panel=document.getElementById("panel");
+  function esc(s){return String(s).replace(/[&<>]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c];});}
+  function tagHTML(p){var cls={pick:"t-pick",maybe:"t-maybe",no:"t-no"}[p.verdict];return '<span class="tag '+cls+'">'+esc(p.verdictText)+'</span>';}
+  function whyHTML(p){if(!p.sc)return '';var col=['var(--bad)','var(--warn)','var(--pick)'];
+    return '<div class="why"><div class="sc">'+p.sc.map(function(s){var c=s[2]<0?'var(--muted)':col[s[2]];return '<span class="scc" style="--c:'+c+'"><b>'+esc(s[0])+'</b> '+esc(s[1])+' <small>('+esc(s[3])+')</small></span>';}).join('')+'</div><p class="whyp"><b>판정 이유</b>'+esc(p.why)+'</p></div>';}
+  function friendHTML(p){return p.friend?'<span class="tag t-friend">친구 추천</span>':'';}
+  function revHTML(p){var r=p.reviews||[];var h='<p class="revsrc">'+esc(p.revSrc||'')+'</p>';
+    h+=r.map(function(v){var n=parseFloat(v.s);var low=!isNaN(n)&&n<7;return '<p class="rv"><b'+(low?' style="color:var(--warn)"':'')+'>'+esc(v.s)+'</b> '+esc(v.t)+'<br><span class="who">'+esc(v.w)+'</span></p>';}).join('');return h;}
+  function render(p){
+    var h="";
+    if(p.type==="hotel"){
+      h+='<p class="kind">숙소 후보'+(p.id==="mine"?", 지금 예약한 곳":"")+'</p>';
+      h+='<h3>'+esc(p.full)+tagHTML(p)+friendHTML(p)+'</h3>';
+      h+='<p>'+esc(p.brief||'')+'</p>';
+      h+='<dl class="facts"><dt>4박 총액</dt><dd>'+esc(p.price)+'</dd><dt>와이탄까지</dt><dd>'+esc(p.bund)+'</dd><dt>평점</dt><dd>'+esc(p.rating)+'</dd></dl>';
+      h+='<div class="links"><a target="_blank" rel="noopener" href="'+esc(p.agoda)+'">아고다에서 보기</a><a target="_blank" rel="noopener" href="'+esc(amap(p))+'">애플 지도</a><a target="_blank" rel="noopener" href="'+esc(gmap(p.lat,p.lon))+'">구글 지도</a></div>';
+    }else{
+      h+='<p class="kind">'+(p.type==="spot"?"인스타에서 찾은 곳":"관광지")+', 숙소에서 '+esc(p.dist)+'</p><h3>'+esc(p.name)+' <span class="cnn">'+esc(p.cn||'')+'</span></h3><p>'+esc(p.desc)+'</p>'+spotsHTML(p)+(p.tip?'<p class="tipline">'+esc(p.tip)+'</p>':'');
+      h+=linksHTML(p);
+    }
+    panel.innerHTML=h;
+  }
+  function select(id,scroll){
+    selected=id;
+    Object.keys(pinEls).forEach(function(k){pinEls[k].g.classList.toggle("sel",k===id);});
+    var o=pinEls[id];pinsG.appendChild(o.g);
+    render(o.p);
+    document.querySelectorAll(".sights .sight").forEach(function(c){c.classList.toggle("active",c.dataset.id===id);});
+    var cd=document.querySelector('.sights .sight[data-id="'+id+'"]');
+    if(cd&&!cd.classList.contains("open")){cd.classList.add("open");cd.querySelector(".head").setAttribute("aria-expanded","true");}
+    refreshVisibility();
+    function inBox(c){var x=+o.g.dataset.x,y=+o.g.dataset.y;return x>c[0]&&x<c[0]+c[2]&&y>c[1]&&y<c[1]+c[3];}
+    if(!inBox(VIEWS[view]))goView(inBox(VIEWS.core)?"core":(inBox(VIEWS.all)?"all":"wide"));
+    if(scroll){var bm=document.getElementById("bigmap");if(bm&&!bm.open){bm.open=true;setTimeout(function(){window.dispatchEvent(new Event("resize"));},0);}}
+    if(scroll)document.querySelector(".mapbox").scrollIntoView({behavior:reduce?"auto":"smooth",block:"start"});
+  }
+
+  document.querySelectorAll("[data-view]").forEach(function(bt){bt.addEventListener("click",function(){goView(bt.dataset.view);});});
+  var CAPS={bund:"와이탄 확대: 숙소 주변 1~2km를 크게 봐요. 걸어서 다닐 곳과 인스타에서 찾은 곳 이름이 여기서 보여요.",core:"시내 중심: 관광지가 모여 있는 범위예요. 인스타 장소 이름은 눌렀을 때만 보여요. 서쪽 외곽 숙소 3곳은 화면 밖이에요.",all:"후보 전체: 숙소 6곳이 모두 보이도록 넓혔어요. 점선 원은 와이탄에서 5km, 10km라 숙소가 얼마나 먼지 비교할 수 있어요.",wide:"디즈니까지: 동쪽 디즈니랜드까지 보이도록 가장 넓게 봐요."};
+  function setCap(){var c=document.getElementById("vcap");if(!c)return;c.textContent=CAPS[view]+(onlyHotels?" 지금은 숙소만 진하게 표시하고 관광지는 흐리게 처리했어요.":"");}
+  var fb=document.getElementById("onlyHotel");
+  fb.addEventListener("change",function(){onlyHotels=fb.checked;refreshVisibility();setCap();});
+  setCap();
+
+  // hotel list
+  var rows=document.getElementById("hotelRows"),rowsEx=document.getElementById("hotelRowsEx");
+  var ORDER=["base","ji","mine","atwell","atour","yard"];
+  var hotels=places.filter(function(p){return p.type==="hotel";}).sort(function(a,b){return ORDER.indexOf(a.id)-ORDER.indexOf(b.id);});
+  hotels.forEach(function(p){
+    var a=document.createElement("article");a.id="h-"+p.id;a.className="hrow"+(p.verdict==="pick"?" mine":"");
+    a.innerHTML='<div class="htop"><h3><button type="button">'+esc(p.full)+'</button></h3>'+tagHTML(p)+friendHTML(p)+'</div>'+
+      '<dl class="hfacts"><div><dt>4박 총액</dt><dd>'+esc(p.price)+'</dd></div><div><dt>인당</dt><dd>1박 '+esc(p.pn)+', 4박 '+esc(p.pt)+'</dd></div><div><dt>와이탄까지</dt><dd>'+esc(p.bund)+'</dd></div><div><dt>평점</dt><dd>'+esc(p.rating)+'</dd></div></dl>'+
+      '<div class="revbox">'+revBlock(p)+'</div>'+
+      (p.tip?'<p class="tipline">'+esc(p.tip)+'</p>':'')+
+      '<div class="links"><a target="_blank" rel="noopener" href="'+esc(p.agoda)+'">아고다에서 보기</a></div>';
+    a.querySelector("h3 button").addEventListener("click",function(){select(p.id,true);});
+    (p.verdict==="no"?rowsEx:rows).appendChild(a);
+  });
+  var vsum=document.getElementById("vsum");
+  hotels.forEach(function(p){
+    var r=document.createElement("div");r.className="vrow";
+    r.innerHTML='<div class="vl">'+tagHTML(p)+'<button type="button">'+esc(p.name)+'</button></div><div class="vr">'+chipsHTML(p)+'<p>'+esc(p.brief||'')+'</p></div>';
+    r.querySelector("button").addEventListener("click",function(){if(p.verdict==="no")document.getElementById("exclBox").open=true;var t=document.getElementById("h-"+p.id);if(t)t.scrollIntoView({behavior:reduce?"auto":"smooth",block:"start"});});
+    vsum.appendChild(r);
+  });
+
+  // sights
+  function makeCard(p,box){
+    var div=document.createElement("div");div.className="sight";div.dataset.id=p.id;
+    var hasPin=p.lat!=null&&!p.nopin;
+    div.innerHTML='<button type="button" class="head" aria-expanded="false"><span class="sn">'+esc(p.name)+'</span><span class="cn">'+esc(p.cn||'')+'</span></button><p class="dist">'+(p.dist?(hasPin?'숙소에서 ':'')+esc(p.dist):'지점 여러 곳, 가오더 지도에서 검색')+'</p><p>'+esc(p.desc)+'</p><div class="more">'+spotsHTML(p)+(p.tip?'<p class="tipline">'+esc(p.tip)+'</p>':'')+linksHTML(p)+(hasPin?'<button type="button" class="tomap">위 지도에서 보기</button>':'')+'</div>';
+    div.querySelector(".head").addEventListener("click",function(){
+      var open=!div.classList.contains("open");div.classList.toggle("open",open);this.setAttribute("aria-expanded",open?"true":"false");
+      if(open&&hasPin)select(p.id,false);
+    });
+    if(hasPin)div.querySelector(".tomap").addEventListener("click",function(){select(p.id,true);});
+    box.appendChild(div);
+  }
+  var sl=document.getElementById("sightList");
+  places.filter(function(p){return p.type==="sight"&&p.id!=="disney";}).forEach(function(p){makeCard(p,sl);});
+  var spl=document.getElementById("spotList");
+  var CATMAP={vessel:"cafe",cafes:"cafe",xmas:"see",kgov:"see",wolf:"food",jianbing:"food",gelato:"snack",kinglomo:"snack"};
+  var CATS=[["food","맛집"],["cafe","카페, 바"],["see","볼거리, 행사"],["snack","간식"]];
+  CATS.forEach(function(c){
+    var list=places.filter(function(p){return p.type==="spot"&&(p.cat||CATMAP[p.id]||"see")===c[0];});
+    if(!list.length)return;
+    var hd=document.createElement("h3");hd.className="spcat";hd.textContent=c[1];spl.appendChild(hd);
+    list.forEach(function(p){makeCard(p,spl);});
+  });
+
+  // alternatives (구글 지도 후기 기준, 일정 밖 대안)
+  [
+    {id:"volcan",cat:"cafe",name:"카페 델 볼칸",cn:"Café del Volcán (永康路80号)",lat:31.210922,lon:121.457847,q:"Café del Volcán 永康路",desc:"융캉루의 작은 스페셜티 카페. 원두를 골라 핸드드립으로 내려 줘요. 08:00~20:00(주말 10시부터), 가게 안에 화장실은 없어요."},
+    {id:"idwt",cat:"cafe",name:"인 도우 위 트러스트",cn:"In Dough We Trust (永康路)",lat:31.210635,lon:121.457497,q:"In Dough We Trust 上海 永康路",desc:"빈티지 꽃무늬 찻잔과 노란 조명이 예쁜 베이커리 카페. 좌석 안내가 불친절했다는 후기도 있어요."},
+    {id:"ops",cat:"cafe",name:"O.P.S. 카페",cn:"O.P.S. CAFE (太原路177号)",lat:31.20561,lon:121.45535,q:"O.P.S. CAFE 太原路",desc:"계절마다 바뀌는 코스형 커피 음료만 파는 곳. 앉을 자리 없이 서서 마셔요. 평일 대기는 10분 안팎."},
+    {id:"metalhands",cat:"cafe",name:"메탈 핸즈",cn:"铁手咖啡 Metal Hands",lat:31.21787,lon:121.46501,q:"铁手咖啡 Metal Hands 上海",desc:"피스타치오 더티 라테로 유명한 상하이 카페 브랜드. 자리가 좁고 맛 평가는 갈려요."},
+    {id:"zhuang2",cat:"food",name:"장씨룽싱 저장중루점",cn:"庄氏隆兴 (浙江中路441号)",lat:31.2387176,lon:121.4733618,q:"庄氏隆兴 浙江中路",desc:"난징동루 쪽 장씨룽싱 지점. 게알 국수와 바삭한 돈가스가 인기고, 저녁엔 줄이 길어요."},
+    {id:"shmuseum",cat:"see",name:"상하이 박물관",cn:"上海博物馆 (人民大道201号)",lat:31.2283307,lon:121.4755278,q:"上海博物馆 人民广场",desc:"인민광장의 대형 박물관. 09:00~17:00이고, 일부 전시실이 닫혀 있었다는 후기가 있어 방문 전 확인이 필요해요."},
+    {id:"henjiu2",cat:"food",name:"헌지우이치엔 다푸루점",cn:"很久以前羊肉串 (大浦路403号 2楼)",lat:31.19847,lon:121.47245,q:"很久以前羊肉串 大浦路",desc:"퇄즈팡 근처 양꼬치 지점. 평일 17시 오픈 10분 전에 가서 5분만 기다렸다는 후기가 있어요."},
+    {id:"xibo",cat:"food",name:"시보 (신장 요리)",cn:"西部 Xibo (常熟路83号)",lat:31.2172086,lon:121.4478702,q:"Xibo 新疆菜 常熟路",desc:"신장 출신 사장님이 하는 분위기 좋은 신장 요리집. 양꼬치, 양갈비, 고기 파이가 인기예요. 점심 12:00~14:30, 저녁 18:00~23:00."},
+    {id:"sapar",cat:"food",name:"사파르 위구르 식당",cn:"Sapar Uygur Restaurant (愚园支路20号)",lat:31.222777,lon:121.442472,q:"Sapar 维吾尔餐厅 上海",desc:"징안사 근처 위구르 식당. 양꼬치와 양 콩팥 꼬치 평이 좋고 가격도 괜찮아요. 10:30~22:00."},
+    {id:"haidilao2",cat:"food",name:"하이디라오 와이탄점",cn:"海底捞 外滩店 (南京东路123号)",lat:31.238302,lon:121.48748,q:"海底捞 外滩店",desc:"와이탄 바로 옆 훠궈 지점. 줄은 길지만 새벽에도 영업해서 야경 보고 늦게 가도 돼요."},
+    {id:"rockbund",cat:"see",name:"록번드 미술관",cn:"外滩美术馆 (虎丘路20号)",lat:31.241019,lon:121.487519,q:"上海 外滩美术馆 外滩源",desc:"와이탄위안 골목의 작은 미술관. 월요일 휴관이고, 주변 붉은 벽돌 거리가 사진 명소예요."}
+  ].forEach(function(a){a.type="alt";a.nopin=true;places.push(a);});
+
+  // plan
+  var DAYS=[
+    {d:"월",dt:"12/14",title:"오전 도착, 와이탄 첫날",note:"한 명은 09:45 홍차오공항(T1), 한 명은 09:40 푸둥공항(T1)에 내려요. 공항이 달라서 각자 숙소로 와서 만나요. 체크인이 12시부터라 만나서 바로 체크인할 수 있어요. 크리스마스 마켓은 월, 화 휴무라 수요일에 가요.",stops:[
+      {t:"09:45",label:"홍차오공항 도착",cn:"上海虹桥国际机场 1号航站楼",q:"上海虹桥机场 T1",desc:"숙소(북와이탄)까지 택시로 약 30~40분이에요. 지하철은 10호선 홍차오공항 1터미널역에서 숙소 근처 톈통루역까지 갈아타지 않고 갈 수 있어서 짐이 적으면 편해요. 타기 전에 가오더로 한 번 확인하세요."},
+      {t:"09:40",label:"푸둥공항 도착",cn:"上海浦东国际机场 1号航站楼",q:"上海浦东机场 T1",desc:"숙소까지 택시나 디디로 약 50분~1시간이에요. 지하철은 1시간 반 가까이 걸려서 짐이 있으면 택시를 추천해요. 입국신고서를 미리 써 두면 입국심사가 빨라요."},
+      {id:"mine",t:"12시쯤",label:"숙소에서 만나서 체크인",legMode:"taxi",legText:"각자 공항에서 숙소로: 홍차오는 택시 30~40분(또는 지하철 10호선 톈통루역), 푸둥은 택시나 디디로 50분~1시간"},
+      {id:"zhuang",t:"점심",note:"털게 국수·밥. 숙소에서 약 1.1km"},
+      {id:"vessel",t:"오후",note:"창가 자리에서 커피, 카페는 18시까지"},
+      {id:"mine",t:"늦은 오후",label:"숙소에서 잠깐 휴식"},
+      {id:"nanjing",t:"해 질 녘",label:"난징동루 걸어서 인민광장 쪽으로",note:"네온이 켜지는 시간이에요",legMode:"walk",legText:"숙소에서 와이바이두교를 건너 난징동루 입구까지 도보 약 15분, 거리를 따라 서쪽으로 약 1.2km 걸어요"},
+      {id:"haidilao",t:"저녁",note:"훠궈. 난징동루 끝 제일백화점 5층이라 산책하다 바로 들어가요. 양꼬치가 당기면 헌지우이치엔(남쪽으로 약 1km, 대기 김), 가볍게는 지아지아탕바오"},
+      {id:"bund",t:"밤",note:"난징동루를 따라 걸어오거나 택시로 와이탄까지"},
+      {t:"밤",label:"북와이탄 강변 산책, 와이바이두교",cn:"北外滩滨江, 外白渡桥",lat:31.2437,lon:121.4930,q:"上海 北外滩 外白渡桥 夜景",desc:"숙소 앞 강변을 따라 걷다가 1900년대 초 철제 다리인 와이바이두교를 건너요. 낮에 보는 동방명주는 북와이탄 공원이 예쁘다는 추천도 있어요. 난징동루에서 와이탄으로 가는 길은 사람에 치이지만, 북와이탄은 한적한 숨은 명당이라는 댓글이 많아요. 다리를 건너면 바로 숙소예요."}]},
+    {d:"화",dt:"12/15",title:"예원과 푸둥",note:"예원 정원은 월요일 휴무라 화요일에 넣었어요.",stops:[
+      {id:"jianbing",t:"아침",label:"지엔빙 (숙소 근처 노점)",lat:31.2446,lon:121.4916,note:"유명 가게는 훙커우에 있지만 숙소, 난징동루 주변 노점도 많아요"},
+      {id:"yu",t:"오전",note:"남상만두점 샤오롱바오, 치파오 체험도 여기서. 미니소 근처에 대왕 과일모찌도 있대요"},
+      {id:"pearl",t:"오후",label:"루자쭈이 원형 육교, 동방명주",note:"강 건너 푸둥으로",legMode:"metro",legText:"강을 건너야 해요. 지하철 14호선 예원역에서 루자쭈이역까지 한 정거장(추천), 택시는 약 15분"},
+      {id:"tower",t:"해 질 녘",note:"전망대 일몰, 미리 예매"},
+      {id:"libaixie",t:"저녁",note:"게살국수. 대안은 장씨룽싱(쓰촨중루)",legMode:"metro",legText:"강 건너 와이탄으로: 지하철 2호선 루자쭈이역에서 난징동루역까지 한 정거장, 내려서 도보 약 10분. 택시는 약 15분"},
+      {t:"밤 (선택)",label:"황푸강 유람선",cn:"黄浦江游船",lat:31.2395,lon:121.4915,q:"上海 黄浦江 游船 夜景",desc:"와이탄 쪽 선착장에서 타요. 배 위에서 양쪽 야경을 한 번에 볼 수 있어요."},
+      {id:"gelato",t:"밤",note:"밤 9시 이후 1+1, 동선 근처 지점으로"}]},
+    {d:"수",dt:"12/16",title:"옛 프랑스 조계와 크리스마스 마켓",note:"서쪽에서 동쪽으로 한 방향으로 이동하고, 밤에 숙소 근처로 돌아와 마켓에 가요.",stops:[
+      {id:"wukang",t:"오전",note:"아침에 택시로 바로 출발"},
+      {id:"fanlou",t:"점심",note:"우캉맨션에서 약 1km. 대안: 라오지스(홍소육, 파기름면, IAPM 3층)"},
+      {id:"cafes",t:"오후",note:"산시난루역 7번 출구"},
+      {id:"tzf",t:"오후"},
+      {id:"kgov",t:"오후",note:"관람 시간 확인, 입장료 20위안"},
+      {id:"xtd",t:"이른 저녁",note:"곰돌이 컵 카페 13DE MARZO도 신천지에 있어요"},
+      {id:"xmas",t:"밤 8시쯤",note:"12/16 예약, 22시까지. 끝나면 걸어서 숙소로"}]},
+    {d:"목",dt:"12/17",title:"디즈니랜드 하루",note:"다음 날 아침 출국이라 짐은 수요일 밤에 미리 싸 두세요.",stops:[
+      {id:"disney",t:"종일",legMode:"taxi",legText:"숙소에서 택시 약 40~50분(추천), 지하철은 11호선 디즈니역까지 1시간 이상",link:"#disney",linkText:"디즈니랜드 섹션에서 팁, 반입 금지 물품 보기"},
+      {t:"밤",label:"숙소에서 털게 배달",legMode:"taxi",legText:"디즈니에서 숙소까지 택시 약 40~50분",desc:"지친 날 숙소에서 메이투안으로 털게(大闸蟹)를 시켜 먹어요.",q:"阳澄湖大闸蟹 清蒸",link:"#delivery",linkText:"배달 음식 섹션에서 주문 방법 보기"}]},
+    {d:"금",dt:"12/18",title:"출국",note:"",stops:[
+      {id:"mine",t:"오전",label:"체크아웃, 공항",note:"돌아오는 편이 정해지면 공항과 출발 시간을 맞춰 넣을게요. 푸둥이면 차로 약 50분, 홍차오면 약 30~40분"}]}
+  ];
+  var CATN={food:"맛집",cafe:"카페, 바",see:"볼거리",snack:"간식"};
+  function pById(id){for(var i=0;i<places.length;i++)if(places[i].id===id)return places[i];return null;}
+  function catOf(p){if(p.type==="alt")return (CATN[p.cat]||"볼거리")+", 구글 후기 기준";return p.type==="sight"?"관광지":(CATN[p.cat||CATMAP[p.id]||"see"]||"볼거리");}
+  function fmtD(d){return d<1?(Math.round(d*10)*100)+"m":d.toFixed(1)+"km";}
+  function firstSentence(t){t=t||"";var i=t.indexOf(". ");return i>0?t.slice(0,i+1):t;}
+  function photoBtns(q){q=encodeURIComponent(q);return '<a class="photo-btn" target="_blank" rel="noopener" href="'+esc("https://www.google.com/search?tbm=isch&q="+q)+'">사진 보기 (구글)</a><a class="photo-btn" target="_blank" rel="noopener" href="'+esc("https://search.naver.com/search.naver?where=image&query="+q)+'">사진 보기 (네이버)</a>';}
+  function mapLinks(o,id){var h='<div class="links"><a target="_blank" rel="noopener" href="'+esc(amap(o))+'">애플 지도</a><a target="_blank" rel="noopener" href="'+esc(gmap(o.lat,o.lon))+'">구글 지도</a>';if(id&&pinEls[id])h+='<button type="button" class="lk" data-sel="'+id+'">전체 지도에서 보기</button>';return h+'</div>';}
+  function stopInfo(st){var p=st.id?pById(st.id):null;
+    return {p:p,name:st.label||(p?p.name:""),cn:st.cn||(p?p.cn:""),lat:st.lat!=null?st.lat:(p?p.lat:null),lon:st.lon!=null?st.lon:(p?p.lon:null),desc:st.desc||(p?(p.type==="hotel"?(p.stayDesc||""):(p.desc||p.brief)):""),q:st.q||(p?(p.q||p.name):st.label)};}
+  function nearby(lat,lon,ex){var a=xy(lat,lon);return places.filter(function(p){return p.lat!=null&&p.type!=="hotel"&&ex.indexOf(p.id)<0;}).map(function(p){var b=xy(p.lat,p.lon);return {p:p,d:Math.hypot(a[0]-b[0],a[1]-b[1])};}).filter(function(o){return o.d<=2.0;}).sort(function(x,y){return x.d-y.d;}).slice(0,5);}
+  var curDay=0;
+  var LGM={walk:"도보 추천",taxi:"택시 추천",metro:"지하철 추천",both:"도보 또는 택시"};
+  function legInfo(a,b){var p=xy(a.lat,a.lon),q=xy(b.lat,b.lon);var d=Math.hypot(p[0]-q[0],p[1]-q[1])*1.3;if(d<0.12)return null;
+    var w=Math.max(1,Math.round(d/4.5*60)),t=Math.max(8,Math.round(d/22*60+5));
+    if(d<=1.5)return {mode:"walk",text:fmtD(d)+", 도보 약 "+w+"분"};
+    if(d<=2.6)return {mode:"both",text:fmtD(d)+", 도보 약 "+w+"분 또는 택시 약 "+t+"분"};
+    return {mode:"taxi",text:fmtD(d)+", 택시(디디) 약 "+t+"분"+(d>4?", 지하철도 가능":"")};}
+  var dState={vb:[0,0,10,10],route:[],pins:[]};
+  function drawDmap(){var svg=document.getElementById("dmap");if(!svg)return;var vb=dState.vb;svg.setAttribute("viewBox",vb.join(" "));
+    var r=svg.getBoundingClientRect();if(!r.width)return;var k=Math.max(vb[2]/r.width,vb[3]/r.height);
+    document.querySelectorAll("#dpins > g").forEach(function(g){g.setAttribute("transform","translate("+g.dataset.x+" "+g.dataset.y+") scale("+k+")");});}
+  function renderDay(i){curDay=i;var D=DAYS[i];
+    document.querySelectorAll("#dayTabs button").forEach(function(b,k){b.setAttribute("aria-selected",k===i?"true":"false");});
+    document.getElementById("dayHead").innerHTML='<b>'+esc(D.d+" "+D.dt+", "+D.title)+'</b>'+(D.note?'<span>'+esc(D.note)+'</span>':'');
+    var ex=D.stops.map(function(s){return s.id;}).filter(Boolean).concat(["mine"]);
+    var ol=document.getElementById("stops");ol.innerHTML="";
+    var home=pById("mine"),H={lat:home.lat,lon:home.lon,home:true};
+    var infos=D.stops.map(stopInfo);
+    var route=[],pins=[];
+    function addLeg(L){if(!L)return;var li=document.createElement("li");li.className="leg leg-"+L.mode;li.innerHTML='<span class="lgm">'+esc(LGM[L.mode]||"이동")+'</span><span>'+esc(L.text)+'</span>';ol.appendChild(li);}
+    var prev=null;
+    if(D.stops[0].id!=="mine"&&infos[0].lat!=null&&!D.stops[0].legText){prev=H;route.push(H);}
+    D.stops.forEach(function(st,k){var I=infos[k],p=I.p;
+      if(st.legText)addLeg({mode:st.legMode||"taxi",text:st.legText});
+      else if(prev&&I.lat!=null){var L=legInfo(prev,I);if(L&&prev.home)L.text="숙소에서 "+L.text;addLeg(L);}
+      if(st.legText&&I.lat!=null&&route.length===0)route.push(prev||H);
+      if(I.lat!=null){route.push({lat:I.lat,lon:I.lon});if(st.id!=="mine")pins.push({lat:I.lat,lon:I.lon,n:k+1,name:I.name});}
+      var li=document.createElement("li");li.className="stop";li.dataset.k=k+1;
+      var b='';
+      if(st.note)b+='<p><b>'+esc(st.note)+'</b></p>';
+      if(I.desc)b+='<p>'+esc(I.desc)+'</p>';
+      if(p&&p.type!=="hotel"){b+=spotsHTML(p);if(p.tip)b+='<p class="tipline">'+esc(p.tip)+'</p>';}
+      b+='<div>'+photoBtns(I.q)+'</div>';
+      if(I.lat!=null)b+=mapLinks({lat:I.lat,lon:I.lon,cn:I.cn,name:I.name},p&&p.lat!=null&&!p.nopin?p.id:null);
+      if(st.link)b+='<p style="margin-top:10px"><a href="'+st.link+'">'+esc(st.linkText)+'</a></p>';
+      if(I.lat!=null&&st.id!=="disney"&&st.id!=="mine"){var nb=nearby(I.lat,I.lon,ex.concat(st.id?[st.id]:[]));
+        if(nb.length){b+='<div class="alts"><h4>근처 대안</h4>'+nb.map(function(o){var q=o.p;return '<div class="alt"><b>'+esc(q.name)+'</b><span class="acat">'+esc(catOf(q))+', '+fmtD(o.d)+'</span><p>'+esc(firstSentence(q.desc))+'</p><div class="links"><a target="_blank" rel="noopener" href="'+esc("https://www.google.com/search?tbm=isch&q="+encodeURIComponent(q.q||q.name))+'">사진</a>'+(pinEls[q.id]?'<button type="button" class="lk" data-sel="'+q.id+'">지도에서 보기</button>':'')+'</div></div>';}).join('')+'</div>';}}
+      li.innerHTML='<button type="button" class="sh" aria-expanded="false"><span class="snum">'+(k+1)+'</span><span class="stitle"><span class="stime">'+esc(st.t||'')+'</span><b>'+esc(I.name)+'</b>'+(I.cn?'<span class="scn">'+esc(I.cn)+'</span>':'')+'</span></button><div class="sbody">'+b+'</div>';
+      li.querySelector(".sh").addEventListener("click",function(){var o=!li.classList.contains("open");li.classList.toggle("open",o);this.setAttribute("aria-expanded",o?"true":"false");
+        var dp=document.getElementById("dpins"),any=false;
+        dp.querySelectorAll(".dpin").forEach(function(g){var on=o&&+g.dataset.n===k+1;g.classList.toggle("on",on);if(on){any=true;dp.appendChild(g);}});
+        var hm=dp.querySelector(".dhome");if(hm){var hon=o&&st.id==="mine";hm.classList.toggle("on",hon);if(hon)any=true;}
+        dp.classList.toggle("focus",any);
+        if(o){document.querySelectorAll("#stops .stop.open").forEach(function(x){if(x!==li){x.classList.remove("open");x.querySelector(".sh").setAttribute("aria-expanded","false");}});}
+        if(o&&p&&pinEls[p.id]&&!p.nopin)select(p.id,false);});
+      ol.appendChild(li);
+      prev=I.lat!=null?{lat:I.lat,lon:I.lon}:null;
+    });
+    var last=D.stops[D.stops.length-1];
+    if(prev&&last.id!=="mine"){var L=legInfo(prev,H);if(L){L.text="숙소까지 "+L.text;addLeg(L);route.push(H);}}
+    // day map
+    var all=route.concat(pins).concat([H]).map(function(o){return xy(o.lat,o.lon);});
+    var xs=all.map(function(q){return q[0];}),ys=all.map(function(q){return q[1];});
+    var x0=Math.min.apply(null,xs),x1=Math.max.apply(null,xs),y0=Math.min.apply(null,ys),y1=Math.max.apply(null,ys);
+    var w=Math.max(x1-x0,1.4),h=Math.max(y1-y0,1.4),cx=(x0+x1)/2,cy=(y0+y1)/2;var sz=Math.max(w,h)*1.25;
+    var svg=document.getElementById("dmap"),rr=svg.getBoundingClientRect(),asp=rr.width&&rr.height?rr.width/rr.height:1;
+    var vw=asp>=1?sz*asp:sz,vh=asp>=1?sz:sz/asp;
+    dState.vb=[cx-vw/2,cy-vh/2,vw,vh];
+    document.getElementById("driver").setAttribute("d",document.getElementById("river").getAttribute("d"));
+    var rpts=route.map(function(o){return xy(o.lat,o.lon);});
+    document.getElementById("droute").setAttribute("d",rpts.length>1?rpts.map(function(q,k){return (k?"L":"M")+q[0].toFixed(3)+" "+q[1].toFixed(3);}).join(" "):"");
+    var NSd="http://www.w3.org/2000/svg",dp=document.getElementById("dpins");dp.innerHTML="";
+    var hq=xy(H.lat,H.lon),hg=document.createElementNS(NSd,"g");hg.setAttribute("class","dhome");hg.dataset.x=hq[0];hg.dataset.y=hq[1];
+    hg.innerHTML='<circle r="7"></circle><text x="11" y="4">숙소</text>';dp.appendChild(hg);
+    pins.forEach(function(o){var q=xy(o.lat,o.lon),g=document.createElementNS(NSd,"g");g.setAttribute("class","dpin");g.dataset.x=q[0];g.dataset.y=q[1];g.dataset.n=o.n;
+      g.innerHTML='<circle class="ring" r="17"></circle><circle class="pd" r="10"></circle><text class="num">'+o.n+'</text><text class="dlabel" x="20" y="5">'+esc(o.name||"")+'</text>';
+      g.addEventListener("click",function(){var li=document.querySelector('#stops .stop[data-k="'+o.n+'"]');if(li){if(!li.classList.contains("open"))li.querySelector(".sh").click();li.scrollIntoView({behavior:reduce?"auto":"smooth",block:"center"});}});
+      dp.appendChild(g);});
+    drawDmap();
+    document.getElementById("route").setAttribute("d",rpts.length>1?rpts.map(function(q,k){return (k?"L":"M")+q[0].toFixed(3)+" "+q[1].toFixed(3);}).join(" "):"");
+  }
+  window.addEventListener("resize",drawDmap);
+
+  var tabs=document.getElementById("dayTabs");
+  DAYS.forEach(function(D,i){var b=document.createElement("button");b.type="button";b.setAttribute("role","tab");b.innerHTML=esc(D.d)+' <small>'+esc(D.dt)+'</small>';b.addEventListener("click",function(){renderDay(i);});tabs.appendChild(b);});
+  document.getElementById("stops").addEventListener("click",function(e){var t=e.target.closest("[data-sel]");if(t){select(t.getAttribute("data-sel"),true);}});
+  renderDay(0);
+  var bmd=document.getElementById("bigmap");
+  bmd.addEventListener("toggle",function(){if(bmd.open)window.dispatchEvent(new Event("resize"));});
+  document.querySelectorAll('a[href="#bigmap"]').forEach(function(a){a.addEventListener("click",function(){bmd.open=true;setTimeout(function(){window.dispatchEvent(new Event("resize"));},0);});});
+
+  refreshVisibility();applyVB();select("mine",false);
+  window.addEventListener("resize",applyVB);
+  if(window.ResizeObserver){new ResizeObserver(applyVB).observe(svg);}
+})();
+</script>
+<script>
+(function(){
+  var KEY="sh-prep-v1",st={};
+  try{st=JSON.parse(localStorage.getItem(KEY)||"{}")||{};}catch(e){st={};}
+  var boxes=document.querySelectorAll('.prep input[type=checkbox]');
+  function upd(){document.querySelectorAll('.prep details').forEach(function(d){var b=d.querySelectorAll('input[type=checkbox]');var c=d.querySelector('.cnt');if(!b.length||!c)return;var n=0;b.forEach(function(x){if(x.checked)n++;});c.textContent=n+'/'+b.length;});}
+  boxes.forEach(function(b){b.checked=!!st[b.dataset.k];b.addEventListener('change',function(){st[b.dataset.k]=b.checked;try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}upd();});});
+  upd();
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  });
+}
+</script></body>
+</html>
